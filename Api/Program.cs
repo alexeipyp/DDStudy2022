@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using Api.Middleware;
 
 namespace Api
 {
@@ -113,8 +114,7 @@ namespace Api
 
             app.UseAuthentication();
             app.UseAuthorization();
-
-
+            app.UseTokenValidator();
             app.MapControllers();
 
             app.Run();

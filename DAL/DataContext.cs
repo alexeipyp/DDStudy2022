@@ -7,7 +7,7 @@ namespace DAL
     {
         public DataContext(DbContextOptions<DataContext> options) : base(options)
         {
-
+            Console.WriteLine($"<< Data Context: {Guid.NewGuid()} >>");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -22,5 +22,6 @@ namespace DAL
             => optionsBuilder.UseNpgsql(b => b.MigrationsAssembly("Api"));
 
         public DbSet<User> Users => Set<User>();
+        public DbSet<UserSession> UserSessions => Set<UserSession>();
     }
 }
