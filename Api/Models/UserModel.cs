@@ -2,15 +2,9 @@
 {
     public class UserModel
     {
-        public string Name { get; set; }
-        public string Email { get; set; }
+        public string Name { get; set; } = null!;
+        public string Email { get; set; } = null!;
         public DateTimeOffset BirthDate { get; set; }
 
-        public UserModel(string name, string email, DateTimeOffset birthDate)
-        {
-            Name = name;
-            Email = email;
-            BirthDate = birthDate;
-        }
     }
 }
