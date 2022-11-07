@@ -110,6 +110,8 @@ namespace Api
                 app.UseSwaggerUI();
             }
 
+            app.UseCustomExceptionHandler();
+
             app.UseHttpsRedirection();
 
             app.UseAuthentication();

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper.QueryableExtensions;
 using Api.Services;
 using Microsoft.AspNetCore.Authorization;
+using Common.CustomExceptions;
 
 namespace Api.Controllers
 {
@@ -35,7 +36,7 @@ namespace Api.Controllers
                 var tempFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(), model.TempId.ToString()));
                 if (!tempFileInfo.Exists)
                 {
-                    throw new Exception("file not found");
+                    throw new FileNotFoundException("file not found");
                 }
                 else
                 {
@@ -50,7 +51,7 @@ namespace Api.Controllers
                 }
             }
             else
-                throw new Exception("you are not authorized");
+                throw new NotAuthorizedException("you are not authorized");
         }
 
         [HttpGet]
@@ -88,7 +89,7 @@ namespace Api.Controllers
                 return await _userService.GetUser(userId);
             }
             else
-                throw new Exception("you are not authorized");
+                throw new NotAuthorizedException("you are not authorized");
             }
 
     }

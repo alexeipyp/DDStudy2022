@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Common.CustomExceptions;
 
 namespace Api.Controllers
 {
@@ -13,6 +14,10 @@ namespace Api.Controllers
         [Authorize]
         public async Task<List<MetadataModel>> UploadFiles([FromForm] List<IFormFile> files)
         {
+            if (files.Count == 0)
+            {
+                throw new FileIsNullException("uploaded a null value");
+            }
             var res = new List<MetadataModel>();
             foreach (var file in files)
             {
@@ -23,6 +28,10 @@ namespace Api.Controllers
 
         private async Task<MetadataModel> UploadFile(IFormFile file)
         {
+            if (file.Length == 0)
+            {
+                throw new FileIsNullException("uploaded a null value");
+            }
             var tempPath = Path.GetTempPath();
             var meta = new MetadataModel
             {
@@ -37,13 +46,13 @@ namespace Api.Controllers
             var fileinfo = new FileInfo(newPath);
             if (fileinfo.Exists)
             {
-                throw new Exception("file exist");
+                throw new FileAlreadyExistsException("file exists");                
             }
             else
             {
                 if (fileinfo.Directory == null)
                 {
-                    throw new Exception("temp is null");
+                    throw new DirectoryNotFoundException("temp is null");
                 }
 
                 if (!fileinfo.Directory.Exists)
