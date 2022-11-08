@@ -136,6 +136,7 @@ namespace Api.Services
             {
                 var avatar = new Avatar
                 {
+                    Id = new Guid(),
                     Author = user,
                     MimeType = meta.MimeType,
                     FilePath = filePath,
