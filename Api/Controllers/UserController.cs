@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Api.Models;
 using AutoMapper;
 using DAL;
 using DAL.Entities;
@@ -9,6 +8,9 @@ using AutoMapper.QueryableExtensions;
 using Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Common.CustomExceptions;
+using System.Runtime.CompilerServices;
+using Api.Models.User;
+using Api.Models.Attachments;
 
 namespace Api.Controllers
 {
@@ -17,10 +19,12 @@ namespace Api.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
+        private readonly AttachService _attachService;
 
-        public UserController(UserService userService)
+        public UserController(UserService userService, AttachService attachService)
         {
             _userService = userService;
+            _attachService = attachService;
         }
 
         [HttpPost]
@@ -33,46 +37,28 @@ namespace Api.Controllers
             var userIdString = User.Claims.FirstOrDefault(x => x.Type == "id")?.Value;
             if (Guid.TryParse(userIdString, out Guid userId))
             {
-                var tempFileInfo = new FileInfo(Path.Combine(Path.GetTempPath(), model.TempId.ToString()));
-                if (!tempFileInfo.Exists)
-                {
-                    throw new FileNotFoundException("file not found");
-                }
-                else
-                {
-                    var path = Path.Combine(Directory.GetCurrentDirectory(), "attaches", model.TempId.ToString());
-                    var destFileInfo = new FileInfo(path);
-                    if (destFileInfo.Directory != null && !destFileInfo.Directory.Exists)
-                        destFileInfo.Directory.Create();
-
-                    System.IO.File.Copy(tempFileInfo.FullName, path, true);
-
-                    await _userService.AddAvatarToUser(userId, model, path);
-                }
+                var filePath = _attachService.MoveAttachFromTemp(model.TempId);
+                await _userService.AddAvatarToUser(userId, model, filePath); 
             }
             else
                 throw new NotAuthorizedException("you are not authorized");
         }
 
         [HttpGet]
-        public async Task<FileResult> GetUserAvatar(Guid userId)
+        [Authorize]
+        public async Task<FileStreamResult> GetUserAvatar(Guid userId, bool download = false)
         {
             var attach = await _userService.GetUserAvatar(userId);
-
-            return File(System.IO.File.ReadAllBytes(attach.FilePath), attach.MimeType);
-        }
-
-        [HttpGet]
-        public async Task<FileResult> DownloadAvatar(Guid userId)
-        {
-            var attach = await _userService.GetUserAvatar(userId);
-            HttpContext.Response.ContentType = attach.MimeType;
-            FileContentResult result = new FileContentResult(System.IO.File.ReadAllBytes(attach.FilePath), attach.MimeType)
+            var fs = new FileStream(attach.FilePath, FileMode.Open);
+            if (download)
             {
-                FileDownloadName = attach.Name
-            };
-
-            return result;
+                return File(fs, attach.MimeType, attach.Name);
+            }
+            else
+            {
+                return File(fs, attach.MimeType);
+            }
+            
         }
 
         [HttpGet]

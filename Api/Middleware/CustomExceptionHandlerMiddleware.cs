@@ -28,11 +28,26 @@ namespace Api.Middleware
         private async Task HandleException(HttpContext context, Exception exception)
         {
             var code = HttpStatusCode.InternalServerError;
-            var result = JsonSerializer.Serialize(new 
-            { 
-                Error = exception.Message, 
-                ExceptionType = exception.GetType().FullName,
-            });
+            string result;
+            if (exception.InnerException != null)
+            {
+                result = JsonSerializer.Serialize(new
+                {
+                    Error = exception.Message,
+                    ExceptionType = exception.GetType().FullName,
+                    InnerExceptionValue = exception.InnerException.Message,
+                    InnerExceptionType = exception.InnerException.GetType().FullName,
+                });
+            }
+            else
+            {
+                result = JsonSerializer.Serialize(new
+                {
+                    Error = exception.Message,
+                    ExceptionType = exception.GetType().FullName,
+                });
+            }
+
             switch(exception)
             {
                 case SecurityTokenException:

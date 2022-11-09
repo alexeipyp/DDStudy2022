@@ -61,6 +61,9 @@ namespace Api
             builder.Services.AddAutoMapper(typeof(MapperProfile).Assembly);
 
             builder.Services.AddScoped<UserService>();
+            builder.Services.AddScoped<AuthService>();
+            builder.Services.AddTransient<AttachService>();
+            builder.Services.AddScoped<PostService>();
 
             builder.Services.AddAuthentication(o =>
             {

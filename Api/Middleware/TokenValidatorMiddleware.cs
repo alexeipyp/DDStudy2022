@@ -1,5 +1,6 @@
 ﻿using Api.Services;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 
 namespace Api.Middleware
 {
@@ -11,17 +12,17 @@ namespace Api.Middleware
             _next = next;
         }
 
-        public async Task InvokeAsync(HttpContext context, UserService userService)
+        public async Task InvokeAsync(HttpContext context, AuthService authService)
         {
             var isOk = true;
             var sessionIdString = context.User.Claims.FirstOrDefault(x => x.Type == "sessionId")?.Value;
             if (Guid.TryParse(sessionIdString, out var sessionId))
             {
-                var session = await userService.GetSessionById(sessionId);
+                var session = await authService.GetSessionById(sessionId);
                 if (!session.IsActive)
                 {
                     context.Response.Clear();
-                    context.Response.StatusCode = 401;
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                 }
             }
             if (isOk)
