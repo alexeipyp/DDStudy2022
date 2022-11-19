@@ -17,76 +17,54 @@ namespace Api.Services
     {
         private readonly IMapper _mapper;
         private readonly DAL.DataContext _context;
-        private Func<AttachModel, string?>? _linkContentGenerator;
-        private Func<UserModel, string?>? _linkAvatarGenerator;
-        public void SetLinkGenerator(Func<AttachModel, string?> linkContentGenerator, Func<UserModel, string?> linkAvatarGenerator)
-        {
-            _linkAvatarGenerator = linkAvatarGenerator;
-            _linkContentGenerator = linkContentGenerator;
-        }
-
-        public PostService(IMapper mapper, DataContext context, AttachService attachService)
+        public PostService(IMapper mapper, DataContext context)
         {
             _mapper = mapper;
             _context = context;
-            Console.WriteLine($"<< Post Service: {Guid.NewGuid()} >>");
         }
 
-        public async Task CreatePost(CreatePostModel model)
+        public async Task CreatePost(Guid userId, CreatePostRequest request)
         {
+            var authorizedRequest = _mapper.Map<CreatePostAuthorizedRequest>(request, o => o.AfterMap((s, d) => d.AuthorId = userId));
+            var model = _mapper.Map<CreatePostAuthorizedRequest, CreatePostModel>(authorizedRequest);
+
             var dbPost = _mapper.Map<DAL.Entities.Post>(model);
             await _context.Posts.AddAsync(dbPost);
             await _context.SaveChangesAsync();
         }
 
-        public async Task CommentPost(CreateCommentPostModel model)
+        public async Task CommentPost(Guid userId, CreateCommentPostRequest request)
         {
+
+            var model = _mapper.Map<CreateCommentPostModel>(request, o => o.AfterMap((s, d) => d.AuthorId = userId));
             var dbComment = _mapper.Map<DAL.Entities.Comment>(model);
-            var comment = await _context.Comments.AddAsync(dbComment);
+            await _context.Comments.AddAsync(dbComment);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<PostModel>> GetPosts(int skip, int take)
+        public async Task<IEnumerable<PostModel>> GetPosts(int skip, int take)
         {
             var posts = await _context.Posts
-                .Include(x => x.Author)
-                .ThenInclude(x => x.Avatar)
+                .Include(x => x.Author).ThenInclude(x => x.Avatar)
                 .Include(x => x.PostAttaches)
                 .Include(x => x.Comments)
-                .AsNoTracking().Take(take).Skip(skip).ToListAsync();
+                .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
+                .Select(x => _mapper.Map<PostModel>(x))
+                .ToListAsync();
 
-            var res = posts.Select(post =>
-                new PostModel
-                {
-                    Author = new UserAvatarModel(_mapper.Map<UserModel>(post.Author), post.Author.Avatar == null ? null : _linkAvatarGenerator),
-                    Annotation = post.Annotation,
-                    Id = post.Id,
-                    UploadDate = post.UploadDate,
-                    Attaches = post.PostAttaches?.Select(x =>
-                    new AttachWithLinkModel(_mapper.Map<AttachModel>(x), _linkContentGenerator)).ToList(),
-                    CommentsAmount = post.Comments is null ? 0 : post.Comments.Count 
-                }).ToList();
-
-            return res;
+            return posts;
         }
 
-        public async Task<List<CommentModel>> GetComments(Guid postId, int skip, int take)
+        public async Task<IEnumerable<CommentModel>> GetComments(Guid postId, int skip, int take)
         {
             var comments = await _context.Comments
                 .Where(x => x.PostId == postId)
-                .Include(x => x.Author)
-                .ThenInclude(x => x.Avatar)
-                .AsNoTracking().Take(take).Skip(skip).ToListAsync();
+                .Include(x => x.Author).ThenInclude(x => x.Avatar)
+                .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
+                .Select(x => _mapper.Map<CommentModel>(x))
+                .ToListAsync();
 
-            var res = comments.Select(comment =>
-                new CommentModel
-                {
-                    Author = new UserAvatarModel(_mapper.Map<UserModel>(comment.Author), comment.Author.Avatar == null ? null : _linkAvatarGenerator),
-                    Text = comment.Text,
-                    UploadDate = comment.UploadDate,
-                }).ToList();
-
-            return res;
+            return comments;
         }
 
         public async Task<AttachModel> GetPostAttach(Guid postAttachId)
@@ -95,5 +73,6 @@ namespace Api.Services
 
             return _mapper.Map<AttachModel>(res);
         }
+
     }
 }

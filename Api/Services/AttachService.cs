@@ -1,18 +1,13 @@
 ﻿using Api.Models.Attachments;
-using AutoMapper;
 using Common.CustomExceptions;
-using DAL.Entities;
 using Microsoft.AspNetCore.Mvc;
+using System.Drawing;
+using System.Xml.Linq;
 
 namespace Api.Services
 {
     public class AttachService
     {
-        public AttachService()
-        {
-            Console.WriteLine($"<< Attach Service: {Guid.NewGuid()} >>");
-        }
-
         public async Task<List<MetadataModel>> UploadFiles([FromForm] List<IFormFile> files)
         {
             if (files.Count == 0)
@@ -59,7 +54,7 @@ namespace Api.Services
                 TempId = Guid.NewGuid(),
                 Name = file.FileName,
                 MimeType = file.ContentType,
-                Size = file.Length
+                Size = file.Length,
             };
 
             var newPath = Path.Combine(tempPath, meta.TempId.ToString());

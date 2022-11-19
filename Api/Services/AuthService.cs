@@ -24,21 +24,16 @@ namespace Api.Services
             _mapper = mapper;
             _context = context;
             _config = config.Value;
-            Console.WriteLine($"<< Auth Service: {Guid.NewGuid()} >>");
         }
 
         public async Task<TokenModel> GetToken(string login, string password)
         {
             var user = await GetUserByCredention(login, password);
-            var session = await _context.UserSessions.AddAsync(new DAL.Entities.UserSession
-            {
-                Id = Guid.NewGuid(),
-                User = user,
-                RefreshTokenId = Guid.NewGuid(),
-                Created = DateTime.UtcNow,
-            });
+            var session = _mapper.Map<DAL.Entities.UserSession>(user);
+            await _context.UserSessions.AddAsync(session);
+
             await _context.SaveChangesAsync();
-            return GenerateTokens(session.Entity);
+            return GenerateTokens(session);
         }
 
         public async Task<UserSession> GetSessionById(Guid id)
@@ -71,7 +66,6 @@ namespace Api.Services
                 ValidateLifetime = true,
                 IssuerSigningKey = _config.SymmetricSecuriryKey(),
             };
-
 
             if (new JwtSecurityToken(refreshToken) == null)
             {

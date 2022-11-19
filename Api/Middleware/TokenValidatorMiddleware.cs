@@ -1,4 +1,6 @@
 ﻿using Api.Services;
+using Common.Extentions;
+using Common.Consts;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 
@@ -15,8 +17,8 @@ namespace Api.Middleware
         public async Task InvokeAsync(HttpContext context, AuthService authService)
         {
             var isOk = true;
-            var sessionIdString = context.User.Claims.FirstOrDefault(x => x.Type == "sessionId")?.Value;
-            if (Guid.TryParse(sessionIdString, out var sessionId))
+            var sessionId = context.User.GetClaimValue<Guid>(ClaimNames.SessionId);
+            if (sessionId != default)
             {
                 var session = await authService.GetSessionById(sessionId);
                 if (!session.IsActive)

@@ -6,6 +6,6 @@ namespace Api.Models.Post
     {
         public Guid AuthorId { get; set; }
         public string? Annotation { get; set; }
-        public List<PostAttachModel> Attaches { get; set; } = null!;
+        public List<MetaPathModel> Attaches { get; set; } = null!;
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using Api.Middleware;
+using Api.Mapper;
 
 namespace Api
 {
@@ -64,6 +65,7 @@ namespace Api
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddTransient<AttachService>();
             builder.Services.AddScoped<PostService>();
+            builder.Services.AddScoped<LinkGeneratorService>();
 
             builder.Services.AddAuthentication(o =>
             {

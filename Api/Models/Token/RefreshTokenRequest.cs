@@ -1,6 +1,6 @@
 ﻿namespace Api.Models.Token
 {
-    public class RefreshTokenRequestModel
+    public class RefreshTokenRequest
     {
         public string RefreshToken { get; set; } = null!;
 

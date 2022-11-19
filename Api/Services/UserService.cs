@@ -24,7 +24,6 @@ namespace Api.Services
         {
             _mapper = mapper;
             _context = context;
-            Console.WriteLine($"<< User Service: {Guid.NewGuid()} >>");
         }
         public async Task CreateUser(CreateUserModel model)
         {
@@ -37,35 +36,29 @@ namespace Api.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<List<UserModel>> GetUsers()
+        public async Task<List<UserAvatarModel>> GetUsers()
         {
-            return await _context.Users.AsNoTracking().ProjectTo<UserModel>(_mapper.ConfigurationProvider).ToListAsync();
+            return await _context.Users.AsNoTracking()
+                .Include(x => x.Avatar)
+                .Select(x => _mapper.Map<UserAvatarModel>(x))
+                .ToListAsync();
         }
 
-        public async Task<UserModel> GetUser (Guid id)
+        public async Task<UserAvatarModel> GetUser (Guid id)
         {
-            var user = await GetUserById(id);
+            var user = await GetUserWithAvatarById(id);
 
-            return _mapper.Map<UserModel>(user);
+            return _mapper.Map<UserAvatarModel>(user);
         }
 
-        public async Task AddAvatarToUser(Guid userId, MetadataModel meta, string filePath)
+        public async Task AddAvatarToUser(Guid userId, MetadataModel model)
         {
             var user = await GetUserWithAvatarById(userId);
             if (user != null)
             {
-                var avatar = new Avatar
-                {
-                    Id = new Guid(),
-                    Author = user,
-                    MimeType = meta.MimeType,
-                    FilePath = filePath,
-                    Name = meta.Name,
-                    Size = meta.Size,
-                };
-
-                user.Avatar = avatar;
-
+                var request = _mapper.Map<AddAvatarRequest>(model, o => o.AfterMap((s, d) => d.AuthorId = userId));
+                var withPathModel = _mapper.Map<AddAvatarRequest, MetaPathModel>(request);
+                user.Avatar = _mapper.Map<DAL.Entities.Avatar>(withPathModel);
                 await _context.SaveChangesAsync();
             }
         }
@@ -99,6 +92,5 @@ namespace Api.Services
 
             return user;
         }
-
     }
 }
