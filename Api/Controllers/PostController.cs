@@ -6,6 +6,8 @@ using Api.Models.Post;
 using Api.Models.Attachments;
 using Common.Extentions;
 using Common.Consts;
+using Api.Models.Likes;
+using Common.CustomExceptions;
 
 namespace Api.Controllers
 {
@@ -53,14 +55,34 @@ namespace Api.Controllers
         }
 
         [HttpGet]
-        
+        [Authorize]
         public async Task<IEnumerable<PostModel>> GetPosts(int skip = 0, int take = 10)
-        => await _postService.GetPosts(skip, take);
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                return await _postService.GetPosts(userId, skip, take);
+            }
+            else
+            {
+                throw new NotAuthorizedException("not authorized");
+            }
+        }
 
         [HttpGet]
         [Authorize]
         public async Task<IEnumerable<CommentModel>> GetComments(Guid postId, int skip = 0, int take = 10)
-            => await _postService.GetComments(postId, skip, take);
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                return await _postService.GetComments(userId, postId, skip, take);
+            }
+            else
+            {
+                throw new NotAuthorizedException("not authorized");
+            }
+        }
 
     }
 }
