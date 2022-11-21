@@ -18,10 +18,12 @@ namespace Api.Services
     {
         private readonly IMapper _mapper;
         private readonly DAL.DataContext _context;
-        public PostService(IMapper mapper, DataContext context)
+        private readonly SubscribeService _subscribeService;
+        public PostService(IMapper mapper, DataContext context, SubscribeService subscribeService)
         {
             _mapper = mapper;
             _context = context;
+            _subscribeService = subscribeService;
         }
 
         public async Task CreatePost(Guid userId, CreatePostRequest request)
@@ -87,14 +89,18 @@ namespace Api.Services
 
         public async Task<IEnumerable<PostModel>> GetPosts(Guid userId, int skip, int take)
         {
+            var subs = await _subscribeService.GetAuthorsIdsByFollowerId(userId);
+
             var posts = await _context.Posts
-                .Include(x => x.Author).ThenInclude(x => x.Avatar)
+                .Where(x => subs.Contains(x.AuthorId))
+                .Include(x => x.Author)
+                .ThenInclude(x => x.Avatar) 
                 .Include(x => x.PostAttaches)
                 .Include(x => x.Comments)
                 .Include(x => x.Likes)
                 .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
                 .ToListAsync();
-
+            
             var res = posts
                 .Select(x => _mapper.Map<DAL.Entities.Post, PostModel>(x, o => o.AfterMap((s, d) => d.IsLiked = s.Likes!.Any(x => x.UserId == userId))))
                 .ToList();
@@ -118,11 +124,16 @@ namespace Api.Services
             return res;
         }
 
-        public async Task<AttachModel> GetPostAttach(Guid postAttachId)
+        public async Task<AttachModel> GetPostAttach(Guid userId, Guid postAttachId)
         {
-            var res = await _context.PostAttaches.FirstOrDefaultAsync(x => x.Id == postAttachId);
+            var subs = await _subscribeService.GetAuthorsIdsByFollowerId(userId);
+            var res = await _context.PostAttaches
+                .Join(_context.Posts, x => x.PostId, y => y.Id, (Attach, y) => new {Attach, y.AuthorId})
+                .FirstOrDefaultAsync(x => x.Attach.Id == postAttachId && subs.Contains(x.AuthorId));
+            if (res == null)
+                throw new Exception("post attach not found");
 
-            return _mapper.Map<AttachModel>(res);
+            return _mapper.Map<AttachModel>(res.Attach);
         }
 
         private async Task<bool> CheckPostExist(Guid postId) 

@@ -10,11 +10,11 @@ namespace Api.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
-    public class LikesController : ControllerBase
+    public class LikeController : ControllerBase
     {
         private readonly PostService _postService;
 
-        public LikesController(PostService postService)
+        public LikeController(PostService postService)
         {
             _postService = postService;
         }

@@ -2,6 +2,7 @@
 using Api.Models.Attachments;
 using Api.Models.Likes;
 using Api.Models.Post;
+using Api.Models.Subscribes;
 using Api.Models.User;
 using AutoMapper;
 using Common;
@@ -77,6 +78,8 @@ namespace Api.Mapper
                 .ForMember(d => d.Created, m => m.MapFrom(s => DateTime.UtcNow))
                 ;
             CreateMap<LikeCommentRequest, DAL.Entities.LikeToComment>();
+
+            CreateMap<FollowUserRequest, DAL.Entities.Subscribe>();
         }
     }
 }

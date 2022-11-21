@@ -66,6 +66,7 @@ namespace Api
             builder.Services.AddTransient<AttachService>();
             builder.Services.AddScoped<PostService>();
             builder.Services.AddScoped<LinkGeneratorService>();
+            builder.Services.AddScoped<SubscribeService>();
 
             builder.Services.AddAuthentication(o =>
             {

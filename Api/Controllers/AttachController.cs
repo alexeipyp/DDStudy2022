@@ -5,6 +5,8 @@ using Common.CustomExceptions;
 using Api.Services;
 using Api.Models.Attachments;
 using DAL.Entities;
+using Common.Extentions;
+using Common.Consts;
 
 namespace Api.Controllers
 {
@@ -37,9 +39,18 @@ namespace Api.Controllers
         [HttpGet]
         [Route("{postAttachId}")]
         [Authorize]
-        public async Task<FileResult> GetPostAttach(Guid postAttachId, bool download = false) 
-            => RenderAttach(await _postService.GetPostAttach(postAttachId), download);
-
+        public async Task<FileResult> GetPostAttach(Guid postAttachId, bool download = false)
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                return RenderAttach(await _postService.GetPostAttach(userId, postAttachId), download);
+            }
+            else
+            {
+                throw new NotAuthorizedException("not authorized");
+            }
+        }
         private FileStreamResult RenderAttach(AttachModel attach, bool download)
         {
             var fs = new FileStream(attach.FilePath, FileMode.Open);

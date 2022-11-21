@@ -3,6 +3,7 @@ using System;
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221120135304_subscribes")]
+    partial class subscribes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -150,10 +153,7 @@ namespace Api.Migrations
 
                     b.HasIndex("FollowerId");
 
-                    b.ToTable("Subscribes", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_Subscribes", "\"AuthorId\" <> \"FollowerId\"");
-                        });
+                    b.ToTable("Subscribes");
                 });
 
             modelBuilder.Entity("DAL.Entities.User", b =>

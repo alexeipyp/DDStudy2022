@@ -23,6 +23,20 @@ namespace DAL
             modelBuilder.Entity<LikeToPost>().HasKey(s => new { s.UserId, s.PostId });
             modelBuilder.Entity<LikeToComment>().HasKey(s => new { s.UserId, s.CommentId });
 
+            modelBuilder.Entity<Subscribe>().ToTable(nameof(Subscribes), t =>
+            {
+                t.HasCheckConstraint("CK_Subscribes", "\"AuthorId\" <> \"FollowerId\"");
+            });
+            modelBuilder.Entity<Subscribe>().HasKey(s => new { s.AuthorId, s.FollowerId });
+            modelBuilder.Entity<Subscribe>()
+                .HasOne(s => s.Author)
+                .WithMany(x => x.Followers)
+                .HasForeignKey(s => s.AuthorId);
+            modelBuilder.Entity<Subscribe>()
+                .HasOne(s => s.Follower)
+                .WithMany(x => x.Subscribes)
+                .HasForeignKey(s => s.FollowerId);
+
             modelBuilder.Entity<Avatar>().ToTable(nameof(Avatars));
             modelBuilder.Entity<PostAttach>().ToTable(nameof(PostAttaches));
         }
@@ -39,5 +53,6 @@ namespace DAL
         public DbSet<PostAttach> PostAttaches => Set<PostAttach>();
         public DbSet<LikeToPost> LikesToPosts => Set<LikeToPost>();
         public DbSet<LikeToComment> LikesToComments => Set<LikeToComment>();
+        public DbSet<Subscribe> Subscribes => Set<Subscribe>();
     }
 }
