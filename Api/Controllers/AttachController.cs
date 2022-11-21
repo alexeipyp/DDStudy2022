@@ -7,6 +7,7 @@ using Api.Models.Attachments;
 using DAL.Entities;
 using Common.Extentions;
 using Common.Consts;
+using Common.CustomExceptions.NotAuthorizedExceptions;
 
 namespace Api.Controllers
 {
@@ -48,7 +49,7 @@ namespace Api.Controllers
             }
             else
             {
-                throw new NotAuthorizedException("not authorized");
+                throw new UnauthorizedException("not authorized");
             }
         }
         private FileStreamResult RenderAttach(AttachModel attach, bool download)

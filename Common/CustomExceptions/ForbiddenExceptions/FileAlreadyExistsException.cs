@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common.CustomExceptions
+namespace Common.CustomExceptions.ForbiddenExceptions
 {
-    public class FileAlreadyExistsException : Exception
+    public class FileAlreadyExistsException : ForbiddenException
     {
         public FileAlreadyExistsException()
         {

@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common.CustomExceptions
+namespace Common.CustomExceptions.NotFoundExceptions
 {
-    public class UserNotFoundException : Exception
+    public class UserNotFoundException : NotFoundException
     {
         public UserNotFoundException()
         {

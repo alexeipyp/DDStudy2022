@@ -5,6 +5,8 @@ using Api.Models.Post;
 using Api.Models.User;
 using AutoMapper;
 using Common.CustomExceptions;
+using Common.CustomExceptions.ForbiddenExceptions;
+using Common.CustomExceptions.NotFoundExceptions;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -49,7 +51,7 @@ namespace Api.Services
         {
             if (!(await CheckPostExist(request.PostId)))
             {
-                throw new Exception("post not found");
+                throw new PostNotFoundException("post not found");
             }
             else
             {
@@ -70,7 +72,7 @@ namespace Api.Services
         {
             if (!(await CheckCommentExist(request.CommentId)))
             {
-                throw new Exception("comment not found");
+                throw new CommentNotFoundException("comment not found");
             }
             else
             {
@@ -129,9 +131,11 @@ namespace Api.Services
             var subs = await _subscribeService.GetAuthorsIdsByFollowerId(userId);
             var res = await _context.PostAttaches
                 .Join(_context.Posts, x => x.PostId, y => y.Id, (Attach, y) => new {Attach, y.AuthorId})
-                .FirstOrDefaultAsync(x => x.Attach.Id == postAttachId && subs.Contains(x.AuthorId));
+                .FirstOrDefaultAsync(x => x.Attach.Id == postAttachId);
             if (res == null)
-                throw new Exception("post attach not found");
+                throw new PostAttachNotFoundException("post attach not found");
+            if (!subs.Contains(res.AuthorId))
+                throw new NotSubscribedException("not subscribed");
 
             return _mapper.Map<AttachModel>(res.Attach);
         }
@@ -147,7 +151,7 @@ namespace Api.Services
             var like = await _context.LikesToPosts.FirstOrDefaultAsync(x => x.UserId == userId && x.PostId == postId);
             if (like == null)
             {
-                throw new Exception("user wasn't liked this post");
+                throw new LikeNotFoundException("user wasn't liked this post");
             }
             return like;
         }
@@ -157,7 +161,7 @@ namespace Api.Services
             var like = await _context.LikesToComments.FirstOrDefaultAsync(x => x.UserId == userId && x.CommentId == commentId);
             if (like == null)
             {
-                throw new Exception("user wasn't liked this comment");
+                throw new LikeNotFoundException("user wasn't liked this comment");
             }
             return like;
         }

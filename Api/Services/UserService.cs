@@ -5,6 +5,8 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Common;
 using Common.CustomExceptions;
+using Common.CustomExceptions.ForbiddenExceptions;
+using Common.CustomExceptions.NotFoundExceptions;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;

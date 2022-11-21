@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Api.Services;
 using Api.Models.User;
+using Common.CustomExceptions.NotAuthorizedExceptions;
 
 namespace Api.Controllers
 {
@@ -37,7 +38,7 @@ namespace Api.Controllers
             }
             else
             {
-                throw new NotAuthorizedException("not authorized");
+                throw new UnauthorizedException("not authorized");
             }
         }
 
@@ -52,7 +53,7 @@ namespace Api.Controllers
             }
             else
             {
-                throw new NotAuthorizedException("not authorized");
+                throw new UnauthorizedException("not authorized");
             }
         }
 
@@ -67,7 +68,7 @@ namespace Api.Controllers
             }
             else
             {
-                throw new NotAuthorizedException("not authorized");
+                throw new UnauthorizedException("not authorized");
             }
         }
 
@@ -82,7 +83,7 @@ namespace Api.Controllers
             }
             else
             {
-                throw new NotAuthorizedException("not authorized");
+                throw new UnauthorizedException("not authorized");
             }
         }
     }

@@ -116,13 +116,12 @@ namespace Api
                 app.UseSwaggerUI();
             }
 
-            app.UseCustomExceptionHandler();
-
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseTokenValidator();
+            app.UseCustomExceptionHandler();
             app.MapControllers();
 
             app.Run();

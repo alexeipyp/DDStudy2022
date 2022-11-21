@@ -4,20 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common.CustomExceptions
+namespace Common.CustomExceptions.BadRequestExceptions
 {
-    public class NotAuthorizedException : Exception
+    public class BadRequestException : Exception
     {
-        public NotAuthorizedException()
+        public BadRequestException()
         {
         }
 
-        public NotAuthorizedException(string message)
+        public BadRequestException(string message)
             : base(message)
         {
         }
 
-        public NotAuthorizedException(string message, Exception inner)
+        public BadRequestException(string message, Exception inner)
             : base(message, inner)
         {
         }

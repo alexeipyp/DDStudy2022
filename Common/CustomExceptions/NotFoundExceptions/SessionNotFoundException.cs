@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common.CustomExceptions
+namespace Common.CustomExceptions.NotFoundExceptions
 {
-    public class SessionNotFoundException : Exception
+    public class SessionNotFoundException : NotFoundException
     {
         public SessionNotFoundException()
         {

@@ -8,6 +8,7 @@ using Common.Extentions;
 using Common.Consts;
 using Api.Models.Likes;
 using Common.CustomExceptions;
+using Common.CustomExceptions.NotAuthorizedExceptions;
 
 namespace Api.Controllers
 {
@@ -65,7 +66,7 @@ namespace Api.Controllers
             }
             else
             {
-                throw new NotAuthorizedException("not authorized");
+                throw new UnauthorizedException("not authorized");
             }
         }
 
@@ -80,7 +81,7 @@ namespace Api.Controllers
             }
             else
             {
-                throw new NotAuthorizedException("not authorized");
+                throw new UnauthorizedException("not authorized");
             }
         }
 

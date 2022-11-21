@@ -1,6 +1,7 @@
 ﻿using Api.Models.Subscribes;
 using Api.Models.User;
 using AutoMapper;
+using Common.CustomExceptions.NotFoundExceptions;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -81,7 +82,7 @@ namespace Api.Services
             var sub = await _context.Subscribes.FirstOrDefaultAsync(x => x.AuthorId == authorId && x.FollowerId == followerId);
             if (sub == null)
             {
-                throw new Exception("subscribe not found");
+                throw new SubscribeNotFoundException("subscribe not found");
             }
 
             return sub;

@@ -13,6 +13,7 @@ using Common.Consts;
 using System.Runtime.CompilerServices;
 using Api.Models.User;
 using Api.Models.Attachments;
+using Common.CustomExceptions.NotAuthorizedExceptions;
 
 namespace Api.Controllers
 {
@@ -43,7 +44,7 @@ namespace Api.Controllers
                 await _userService.AddAvatarToUser(userId, model);
             }
             else
-                throw new NotAuthorizedException("you are not authorized");
+                throw new UnauthorizedException("you are not authorized");
         }
 
         [HttpGet]
@@ -60,7 +61,7 @@ namespace Api.Controllers
                 return await _userService.GetUser(userId);
             }
             else
-                throw new NotAuthorizedException("you are not authorized");
+                throw new UnauthorizedException("you are not authorized");
             }
 
     }

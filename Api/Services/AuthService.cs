@@ -3,6 +3,8 @@ using Api.Models.Token;
 using AutoMapper;
 using Common;
 using Common.CustomExceptions;
+using Common.CustomExceptions.ForbiddenExceptions;
+using Common.CustomExceptions.NotFoundExceptions;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;

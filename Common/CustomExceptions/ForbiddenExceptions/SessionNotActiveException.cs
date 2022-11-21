@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common.CustomExceptions
+namespace Common.CustomExceptions.ForbiddenExceptions
 {
-    public class SessionNotActiveException : Exception
+    public class SessionNotActiveException : ForbiddenException
     {
         public SessionNotActiveException()
         {

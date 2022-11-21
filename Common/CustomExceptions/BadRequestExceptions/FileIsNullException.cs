@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Common.CustomExceptions
+namespace Common.CustomExceptions.BadRequestExceptions
 {
-    public class FileIsNullException : Exception
+    public class FileIsNullException : BadRequestException
     {
         public FileIsNullException()
         {

@@ -1,5 +1,7 @@
 ﻿using Api.Models.Attachments;
 using Common.CustomExceptions;
+using Common.CustomExceptions.BadRequestExceptions;
+using Common.CustomExceptions.ForbiddenExceptions;
 using Microsoft.AspNetCore.Mvc;
 using System.Drawing;
 using System.Xml.Linq;
