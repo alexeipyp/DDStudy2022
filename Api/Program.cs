@@ -68,6 +68,8 @@ namespace Api
             builder.Services.AddScoped<LinkGeneratorService>();
             builder.Services.AddScoped<SubscribeService>();
             builder.Services.AddScoped<AccessManagementService>();
+            builder.Services.AddScoped<BlackListService>();
+            builder.Services.AddScoped<MuteListService>();
 
             builder.Services.AddAuthentication(o =>
             {

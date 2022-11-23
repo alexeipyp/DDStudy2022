@@ -49,7 +49,7 @@ namespace Api.Controllers
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                await _subscribeService.UndoFollowUser(userId, request);
+                await _subscribeService.UndoFollowUser(userId, request.AuthorId);
             }
             else
             {

@@ -20,6 +20,8 @@ namespace Api.Services
                 ||
                 (!x.BlockedUsers!.Any(author => author.BlockedUserId == userId)
                     &&
+                !x.BlockedByUsers!.Any(author => author.UserId == userId)
+                    &&
                     (
                         (!x.Config.IsPrivate)
                         ||
@@ -47,6 +49,8 @@ namespace Api.Services
                 &&
                 (!x.BlockedUsers!.Any(author => author.BlockedUserId == userId)
                     &&
+                !x.BlockedByUsers!.Any(author => author.UserId == userId)
+                    &&
                 !x.MutedUsers!.Any(author => author.MutedUserId == userId)
                     &&
                     (
@@ -61,6 +65,14 @@ namespace Api.Services
         public async Task<bool> GetInstantFollowPermission(Guid authorId)
         {
             return await _context.Users.AnyAsync(x => !x.Config.IsPrivate && x.Id == authorId);
+        }
+
+        public async Task<bool> GetFollowPermission(Guid userId, Guid followingUserId)
+        {
+            return await _context.Users
+                .AnyAsync(x => x.Id == userId
+                            && !x.BlockedUsers!.Any(user => user.BlockedUserId == followingUserId && user.UserId == userId) 
+                            && !x.BlockedByUsers!.Any(user => user.UserId == followingUserId && user.BlockedUserId == userId));
         }
     }
 }

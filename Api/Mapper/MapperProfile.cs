@@ -1,6 +1,8 @@
 ﻿using Api.Mapper.MapperActions;
 using Api.Models.Attachments;
+using Api.Models.BlackList;
 using Api.Models.Likes;
+using Api.Models.MuteList;
 using Api.Models.Post;
 using Api.Models.Subscribes;
 using Api.Models.User;
@@ -85,6 +87,11 @@ namespace Api.Mapper
             CreateMap<LikeCommentRequest, DAL.Entities.LikeToComment>();
 
             CreateMap<FollowUserRequest, DAL.Entities.Subscribe>();
+
+            CreateMap<AddUserToBlackListRequest, DAL.Entities.BlackListItem>()
+                .ForMember(d => d.Id, m => m.MapFrom(s => Guid.NewGuid()));
+            CreateMap<AddUserToMuteListRequest, DAL.Entities.MuteListItem>()
+                .ForMember(d => d.Id, m => m.MapFrom(s => Guid.NewGuid()));
         }
     }
 }

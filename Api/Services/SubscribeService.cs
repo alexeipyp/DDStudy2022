@@ -23,6 +23,9 @@ namespace Api.Services
 
         public async Task FollowUser(Guid userId, FollowUserRequest request)
         {
+            if (!(await _accessService.GetFollowPermission(userId, request.AuthorId)))
+                throw new ForbiddenException("not allowed to sub");
+
             var sub = _mapper.Map<DAL.Entities.Subscribe>(request, o => o.AfterMap((s, d) => d.FollowerId = userId));
             if (!(await _accessService.GetInstantFollowPermission(request.AuthorId)))
                 sub.IsAccepted = false;
@@ -31,9 +34,9 @@ namespace Api.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task UndoFollowUser(Guid userId, UndoFollowUserRequest request)
+        public async Task UndoFollowUser(Guid userId, Guid authorId)
         {
-            var sub = await GetSubscribeById(request.AuthorId, userId);
+            var sub = await GetSubscribeById(authorId, userId);
             _context.Subscribes.Remove(sub);
             await _context.SaveChangesAsync();
         }
@@ -78,6 +81,20 @@ namespace Api.Services
             return requests;
         }
 
+        public async Task MutualUndoFollow(Guid userId1, Guid userId2)
+        {
+            var subs = await _context.Subscribes.Where(x =>
+                (x.AuthorId == userId1 && x.FollowerId == userId2)
+                ||
+                (x.AuthorId == userId2 && x.FollowerId == userId1))
+                .ToListAsync();
+            if (subs != null)
+            {
+                _context.Subscribes.RemoveRange(subs);
+                await _context.SaveChangesAsync();
+            }
+        }
+
         private async Task<DAL.Entities.Subscribe> GetSubscribeById(Guid authorId, Guid followerId, bool isSubRequest = false)
         {
             var sub = await _context.Subscribes.FirstOrDefaultAsync(x => x.AuthorId == authorId && x.FollowerId == followerId && x.IsAccepted != isSubRequest);
@@ -88,5 +105,6 @@ namespace Api.Services
 
             return sub;
         }
+
     }
 }
