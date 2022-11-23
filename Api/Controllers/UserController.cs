@@ -19,6 +19,7 @@ namespace Api.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "Api")]
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;

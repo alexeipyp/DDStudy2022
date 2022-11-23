@@ -13,6 +13,7 @@ namespace Api.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "Api")]
     public class SubscribeController : ControllerBase
     {
         private readonly SubscribeService _subscribeService;

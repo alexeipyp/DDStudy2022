@@ -52,6 +52,9 @@ namespace Api
                         new List<string>()
                     }
                 });
+
+                c.SwaggerDoc("Auth", new OpenApiInfo { Title = "Auth" });
+                c.SwaggerDoc("Api", new OpenApiInfo { Title = "Api" });
             });
 
             builder.Services.AddDbContext<DAL.DataContext>(options =>
@@ -116,7 +119,11 @@ namespace Api
             //if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("Api/swagger.json", "Api");
+                    c.SwaggerEndpoint("Auth/swagger.json", "Auth");
+                });
             }
 
             app.UseHttpsRedirection();

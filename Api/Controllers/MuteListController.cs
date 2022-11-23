@@ -14,6 +14,7 @@ namespace Api.Controllers
 {
     [Route("api/[controller]/[action]")]
     [ApiController]
+    [ApiExplorerSettings(GroupName = "Api")]
     public class MuteListController : ControllerBase
     {
         private readonly MuteListService _muteListService;

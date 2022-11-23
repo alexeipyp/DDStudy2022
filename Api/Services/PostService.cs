@@ -42,9 +42,8 @@ namespace Api.Services
         {
             var post = await GetPostById(request.PostId);
             if (!(await _accessService.GetWriteAccessPermission(userId, post.AuthorId)))
-            {
                 throw new ForbiddenException("no permission");
-            }
+
             var model = _mapper.Map<CreateCommentPostModel>(request, o => o.AfterMap((s, d) => d.AuthorId = userId));
             var dbComment = _mapper.Map<DAL.Entities.Comment>(model);
             await _context.Comments.AddAsync(dbComment);
@@ -55,9 +54,10 @@ namespace Api.Services
         {
             var post = await GetPostById(request.PostId);
             if (!(await _accessService.GetWriteAccessPermission(userId, post.AuthorId)))
-            {
                 throw new ForbiddenException("no permission");
-            }
+            if (await CheckLikeToPostExist(userId, request.PostId))
+                throw new ForbiddenException("like already exists");
+
             var dbLike = _mapper.Map<DAL.Entities.LikeToPost>(request, o => o.AfterMap((s, d) => d.UserId = userId));
             await _context.LikesToPosts.AddAsync(dbLike);
             await _context.SaveChangesAsync();
@@ -67,9 +67,8 @@ namespace Api.Services
         {
             var post = await GetPostById(request.PostId);
             if (!(await _accessService.GetWriteAccessPermission(userId, post.AuthorId)))
-            {
                 throw new ForbiddenException("no permission");
-            }
+
             var like = await GetLikeToPostById(userId, request.PostId);
             _context.LikesToPosts.Remove(like);
             await _context.SaveChangesAsync();
@@ -79,9 +78,10 @@ namespace Api.Services
         {
             var comment = await GetCommentWithPostById(request.CommentId);
             if (!(await _accessService.GetWriteAccessPermission(userId, comment.Post.AuthorId)))
-            {
                 throw new ForbiddenException("no permission");
-            }
+            if (await CheckLikeToCommentExist(userId, request.CommentId))
+                throw new ForbiddenException("like already exists");
+
             var dbLike = _mapper.Map<DAL.Entities.LikeToComment>(request, o => o.AfterMap((s, d) => d.UserId = userId));
             await _context.LikesToComments.AddAsync(dbLike);
             await _context.SaveChangesAsync();
@@ -91,9 +91,8 @@ namespace Api.Services
         {
             var comment = await GetCommentWithPostById(request.CommentId);
             if (!(await _accessService.GetWriteAccessPermission(userId, comment.Post.AuthorId)))
-            {
                 throw new ForbiddenException("no permission");
-            }
+
             var like = await GetLikeToCommentById(userId, request.CommentId);
             _context.LikesToComments.Remove(like);
             await _context.SaveChangesAsync();
@@ -192,9 +191,8 @@ namespace Api.Services
         {
             var post = await _context.Posts.FirstOrDefaultAsync(x => x.Id == postId);
             if (post == null)
-            {
                 throw new PostNotFoundException("post not found");
-            }
+
             return post;
         }
 
@@ -204,9 +202,8 @@ namespace Api.Services
                 .Include(x => x.Post)
                 .FirstOrDefaultAsync(x => x.Id == commentId);
             if (comment == null)
-            {
                 throw new LikeNotFoundException("comment not found");
-            }
+
             return comment;
         }
 
@@ -214,9 +211,8 @@ namespace Api.Services
         {
             var like = await _context.LikesToPosts.FirstOrDefaultAsync(x => x.UserId == userId && x.PostId == postId);
             if (like == null)
-            {
                 throw new LikeNotFoundException("user wasn't liked this post");
-            }
+
             return like;
         }
 
@@ -224,10 +220,19 @@ namespace Api.Services
         {
             var like = await _context.LikesToComments.FirstOrDefaultAsync(x => x.UserId == userId && x.CommentId == commentId);
             if (like == null)
-            {
                 throw new LikeNotFoundException("user wasn't liked this comment");
-            }
+
             return like;
+        }
+
+        private async Task<bool> CheckLikeToPostExist(Guid userId, Guid postId)
+        {
+            return await _context.LikesToPosts.AnyAsync(x => x.UserId == userId && x.PostId == postId);
+        }
+
+        private async Task<bool> CheckLikeToCommentExist(Guid userId, Guid commentId)
+        {
+            return await _context.LikesToComments.AnyAsync(x => x.UserId == userId && x.CommentId == commentId);
         }
     }
 }
