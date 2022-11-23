@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20221120173839_forbideSelfSubscribeCheckConstraintInSubscribes")]
-    partial class forbideSelfSubscribeCheckConstraintInSubscribes
+    [Migration("20221122225008_propertyIsAcceptedToSubscribe")]
+    partial class propertyIsAcceptedToSubscribe
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -86,37 +86,20 @@ namespace Api.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("DAL.Entities.LikeToComment", b =>
+            modelBuilder.Entity("DAL.Entities.Like", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CommentId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("UserId", "CommentId");
-
-                    b.HasIndex("CommentId");
-
-                    b.ToTable("LikesToComments");
-                });
-
-            modelBuilder.Entity("DAL.Entities.LikeToPost", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("PostId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("UserId", "PostId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("PostId");
+                    b.ToTable("Likes");
 
-                    b.ToTable("LikesToPosts");
+                    b.UseTptMappingStrategy();
                 });
 
             modelBuilder.Entity("DAL.Entities.Post", b =>
@@ -143,15 +126,25 @@ namespace Api.Migrations
 
             modelBuilder.Entity("DAL.Entities.Subscribe", b =>
                 {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("AuthorId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("FollowerId")
                         .HasColumnType("uuid");
 
-                    b.HasKey("AuthorId", "FollowerId");
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("FollowerId");
+
+                    b.HasIndex("AuthorId", "FollowerId")
+                        .IsUnique();
 
                     b.ToTable("Subscribes", null, t =>
                         {
@@ -226,7 +219,7 @@ namespace Api.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Avatars", (string)null);
+                    b.ToTable("Avatars");
                 });
 
             modelBuilder.Entity("DAL.Entities.PostAttach", b =>
@@ -238,7 +231,43 @@ namespace Api.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("PostAttaches", (string)null);
+                    b.ToTable("PostAttaches");
+                });
+
+            modelBuilder.Entity("DAL.Entities.LikeToComment", b =>
+                {
+                    b.HasBaseType("DAL.Entities.Like");
+
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("UserId", "CommentId")
+                        .IsUnique();
+
+                    b.ToTable("LikesToComments");
+                });
+
+            modelBuilder.Entity("DAL.Entities.LikeToPost", b =>
+                {
+                    b.HasBaseType("DAL.Entities.Like");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId", "PostId")
+                        .IsUnique();
+
+                    b.ToTable("LikesToPosts");
                 });
 
             modelBuilder.Entity("DAL.Entities.Attach", b =>
@@ -269,44 +298,6 @@ namespace Api.Migrations
                     b.Navigation("Author");
 
                     b.Navigation("Post");
-                });
-
-            modelBuilder.Entity("DAL.Entities.LikeToComment", b =>
-                {
-                    b.HasOne("DAL.Entities.Comment", "Comment")
-                        .WithMany("Likes")
-                        .HasForeignKey("CommentId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAL.Entities.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Comment");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("DAL.Entities.LikeToPost", b =>
-                {
-                    b.HasOne("DAL.Entities.Post", "Post")
-                        .WithMany("Likes")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAL.Entities.User", "User")
-                        .WithMany("LikedPosts")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Post");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DAL.Entities.Post", b =>
@@ -382,6 +373,56 @@ namespace Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("DAL.Entities.LikeToComment", b =>
+                {
+                    b.HasOne("DAL.Entities.Comment", "Comment")
+                        .WithMany("Likes")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.Like", null)
+                        .WithOne()
+                        .HasForeignKey("DAL.Entities.LikeToComment", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DAL.Entities.LikeToPost", b =>
+                {
+                    b.HasOne("DAL.Entities.Like", null)
+                        .WithOne()
+                        .HasForeignKey("DAL.Entities.LikeToPost", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.Post", "Post")
+                        .WithMany("Likes")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithMany("LikedPosts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DAL.Entities.Comment", b =>

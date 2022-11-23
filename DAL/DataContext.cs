@@ -19,15 +19,27 @@ namespace DAL
                 .Entity<User>()
                 .HasIndex(f => f.Name)
                 .IsUnique();
-
-            modelBuilder.Entity<LikeToPost>().HasKey(s => new { s.UserId, s.PostId });
-            modelBuilder.Entity<LikeToComment>().HasKey(s => new { s.UserId, s.CommentId });
+            modelBuilder
+                .Entity<Subscribe>()
+                .HasIndex(f => new { f.AuthorId, f.FollowerId })
+                .IsUnique();
+            modelBuilder
+                .Entity<LikeToPost>()
+                .HasIndex(f => new { f.UserId, f.PostId })
+                .IsUnique();
+            modelBuilder
+                .Entity<LikeToComment>()
+                .HasIndex(f => new { f.UserId, f.CommentId })
+                .IsUnique();
 
             modelBuilder.Entity<Subscribe>().ToTable(nameof(Subscribes), t =>
             {
                 t.HasCheckConstraint("CK_Subscribes", "\"AuthorId\" <> \"FollowerId\"");
             });
-            modelBuilder.Entity<Subscribe>().HasKey(s => new { s.AuthorId, s.FollowerId });
+
+            modelBuilder.Entity<UserConfig>()
+                .HasKey(f => f.UserId);
+
             modelBuilder.Entity<Subscribe>()
                 .HasOne(s => s.Author)
                 .WithMany(x => x.Followers)
@@ -36,11 +48,27 @@ namespace DAL
                 .HasOne(s => s.Follower)
                 .WithMany(x => x.Subscribes)
                 .HasForeignKey(s => s.FollowerId);
+            modelBuilder.Entity<BlackListItem>()
+                .HasOne(s => s.User)
+                .WithMany(x => x.BlockedUsers)
+                .HasForeignKey(s => s.UserId);
+            modelBuilder.Entity<BlackListItem>()
+                .HasOne(s => s.BlockedUser)
+                .WithMany(x => x.BlockedByUsers)
+                .HasForeignKey(s => s.BlockedUserId);
+            modelBuilder.Entity<MuteListItem>()
+                .HasOne(s => s.User)
+                .WithMany(x => x.MutedUsers)
+                .HasForeignKey(s => s.UserId);
+            modelBuilder.Entity<MuteListItem>()
+                .HasOne(s => s.MutedUser)
+                .WithMany(x => x.MutedByUsers)
+                .HasForeignKey(s => s.MutedUserId);
 
-            modelBuilder.Entity<Avatar>().ToTable(nameof(Avatars));
-            modelBuilder.Entity<PostAttach>().ToTable(nameof(PostAttaches));
+            modelBuilder.Entity<Attach>().UseTptMappingStrategy();
+            modelBuilder.Entity<Like>().UseTptMappingStrategy();
+
         }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
             => optionsBuilder.UseNpgsql(b => b.MigrationsAssembly("Api"));
 
@@ -51,8 +79,12 @@ namespace DAL
         public DbSet<Post> Posts => Set<Post>();
         public DbSet<Comment> Comments => Set<Comment>();
         public DbSet<PostAttach> PostAttaches => Set<PostAttach>();
+        public DbSet<Like> Likes => Set<Like>(); 
         public DbSet<LikeToPost> LikesToPosts => Set<LikeToPost>();
         public DbSet<LikeToComment> LikesToComments => Set<LikeToComment>();
         public DbSet<Subscribe> Subscribes => Set<Subscribe>();
+        public DbSet<BlackListItem> BlackList => Set<BlackListItem>();
+        public DbSet<MuteListItem> MuteList => Set<MuteListItem>();
+        public DbSet<UserConfig> UsersConfigs => Set<UserConfig>(); 
     }
 }

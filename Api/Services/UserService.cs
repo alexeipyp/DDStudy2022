@@ -34,8 +34,20 @@ namespace Api.Services
                 throw new UserCreationException("user with the same email exists");
             }
             var dbUser = _mapper.Map<DAL.Entities.User>(model);
+            var dbUserConfig = _mapper.Map<DAL.Entities.UserConfig>(dbUser);
             await _context.Users.AddAsync(dbUser);
+            await _context.UsersConfigs.AddAsync(dbUserConfig);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task ChangeUserPrivacy(Guid userId)
+        {
+            var userConfig = await _context.UsersConfigs.FirstOrDefaultAsync(x => x.UserId == userId);
+            if (userConfig != null)
+            {
+                userConfig.IsPrivate = !userConfig.IsPrivate;
+                await _context.SaveChangesAsync();
+            } 
         }
 
         public async Task<List<UserAvatarModel>> GetUsers()

@@ -5,22 +5,24 @@
 namespace Api.Migrations
 {
     /// <inheritdoc />
-    public partial class forbideSelfSubscribeCheckConstraintInSubscribes : Migration
+    public partial class propertyIsAcceptedToSubscribe : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddCheckConstraint(
-                name: "CK_Subscribes",
+            migrationBuilder.AddColumn<bool>(
+                name: "IsAccepted",
                 table: "Subscribes",
-                sql: "\"AuthorId\" <> \"FollowerId\"");
+                type: "boolean",
+                nullable: false,
+                defaultValue: false);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropCheckConstraint(
-                name: "CK_Subscribes",
+            migrationBuilder.DropColumn(
+                name: "IsAccepted",
                 table: "Subscribes");
         }
     }

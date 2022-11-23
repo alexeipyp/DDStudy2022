@@ -86,5 +86,35 @@ namespace Api.Controllers
                 throw new UnauthorizedException("not authorized");
             }
         }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IEnumerable<UserAvatarModel>> GetFollowRequests()
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                return await _subscribeService.GetFollowRequestsListById(userId);
+            }
+            else
+            {
+                throw new UnauthorizedException("not authorized");
+            }
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task AcceptFollowRequest(Guid followerCandidateId)
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                await _subscribeService.AcceptFollowRequest(userId, followerCandidateId);
+            }
+            else
+            {
+                throw new UnauthorizedException("not authorized");
+            }
+        }
     }
 }

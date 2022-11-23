@@ -57,12 +57,42 @@ namespace Api.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IEnumerable<PostModel>> GetPosts(int skip = 0, int take = 10)
+        public async Task<IEnumerable<PostModel>> GetFeed(int skip = 0, int take = 10)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                return await _postService.GetPosts(userId, skip, take);
+                return await _postService.GetFeed(userId, skip, take);
+            }
+            else
+            {
+                throw new UnauthorizedException("not authorized");
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IEnumerable<PostModel>> GetSubscriptionsFeed(int skip = 0, int take = 10)
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                return await _postService.GetSubscriptionsFeed(userId, skip, take);
+            }
+            else
+            {
+                throw new UnauthorizedException("not authorized");
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<IEnumerable<PostModel>> GetUserPosts(Guid userToVisitId, int skip = 0, int take = 10)
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                return await _postService.GetUserPosts(userId, userToVisitId, skip, take);
             }
             else
             {

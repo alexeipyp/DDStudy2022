@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 
 namespace DAL.Entities
 {
-    public class LikeToComment
+    public class LikeToComment : Like
     {
         public Guid UserId { get; set; }
         public Guid CommentId { get; set; }
-
-        public virtual User User { get; set; } = null!;
         public virtual Comment Comment { get; set; } = null!;
+        public virtual User User { get; set; } = null!;
     }
 }

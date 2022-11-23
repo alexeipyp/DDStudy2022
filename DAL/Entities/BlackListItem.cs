@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace DAL.Entities
 {
-    public class LikeToPost : Like
+    public class BlackListItem
     {
+        public Guid Id { get; set; }
         public Guid UserId { get; set; }
-        public Guid PostId { get; set; }
-        public virtual Post Post { get; set; } = null!;
+        public Guid BlockedUserId { get; set; }
+
         public virtual User User { get; set; } = null!;
+        public virtual User BlockedUser { get; set; } = null!;
     }
 }

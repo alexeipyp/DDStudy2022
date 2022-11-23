@@ -18,6 +18,11 @@ namespace Api.Mapper
                 .ForMember(d => d.PasswordHash, m => m.MapFrom(s => HashHelper.GetHash(s.Password)))
                 .ForMember(d => d.BirthDate, m => m.MapFrom(s => s.BirthDate.UtcDateTime))
                 ;
+            CreateMap<DAL.Entities.User, DAL.Entities.UserConfig>()
+                .ForMember(d => d.UserId, m => m.MapFrom(s => s.Id))
+                .ForMember(d => d.IsPrivate, m => m.MapFrom(s => false))
+                ;
+
             CreateMap<DAL.Entities.User, UserModel>();
             CreateMap<DAL.Entities.Avatar, AttachModel>();
 

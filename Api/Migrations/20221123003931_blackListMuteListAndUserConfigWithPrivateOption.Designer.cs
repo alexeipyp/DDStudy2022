@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20221119205626_likesToComments")]
-    partial class likesToComments
+    [Migration("20221123003931_blackListMuteListAndUserConfigWithPrivateOption")]
+    partial class blackListMuteListAndUserConfigWithPrivateOption
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -58,6 +58,27 @@ namespace Api.Migrations
                     b.UseTptMappingStrategy();
                 });
 
+            modelBuilder.Entity("DAL.Entities.BlackListItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("BlockedUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BlockedUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("BlackList");
+                });
+
             modelBuilder.Entity("DAL.Entities.Comment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -86,37 +107,41 @@ namespace Api.Migrations
                     b.ToTable("Comments");
                 });
 
-            modelBuilder.Entity("DAL.Entities.LikeToComment", b =>
+            modelBuilder.Entity("DAL.Entities.Like", b =>
                 {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CommentId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("UserId", "CommentId");
-
-                    b.HasIndex("CommentId");
-
-                    b.ToTable("LikesToComments");
-                });
-
-            modelBuilder.Entity("DAL.Entities.LikeToPost", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("PostId")
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTimeOffset>("Created")
                         .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("UserId", "PostId");
+                    b.HasKey("Id");
 
-                    b.HasIndex("PostId");
+                    b.ToTable("Likes");
 
-                    b.ToTable("LikesToPosts");
+                    b.UseTptMappingStrategy();
+                });
+
+            modelBuilder.Entity("DAL.Entities.MuteListItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("MutedUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MutedUserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("MuteList");
                 });
 
             modelBuilder.Entity("DAL.Entities.Post", b =>
@@ -139,6 +164,34 @@ namespace Api.Migrations
                     b.HasIndex("AuthorId");
 
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Subscribe", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("FollowerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsAccepted")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FollowerId");
+
+                    b.HasIndex("AuthorId", "FollowerId")
+                        .IsUnique();
+
+                    b.ToTable("Subscribes", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Subscribes", "\"AuthorId\" <> \"FollowerId\"");
+                        });
                 });
 
             modelBuilder.Entity("DAL.Entities.User", b =>
@@ -171,6 +224,19 @@ namespace Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("DAL.Entities.UserConfig", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsPrivate")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UsersConfigs");
                 });
 
             modelBuilder.Entity("DAL.Entities.UserSession", b =>
@@ -208,7 +274,7 @@ namespace Api.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Avatars", (string)null);
+                    b.ToTable("Avatars");
                 });
 
             modelBuilder.Entity("DAL.Entities.PostAttach", b =>
@@ -220,7 +286,43 @@ namespace Api.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("PostAttaches", (string)null);
+                    b.ToTable("PostAttaches");
+                });
+
+            modelBuilder.Entity("DAL.Entities.LikeToComment", b =>
+                {
+                    b.HasBaseType("DAL.Entities.Like");
+
+                    b.Property<Guid>("CommentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("UserId", "CommentId")
+                        .IsUnique();
+
+                    b.ToTable("LikesToComments");
+                });
+
+            modelBuilder.Entity("DAL.Entities.LikeToPost", b =>
+                {
+                    b.HasBaseType("DAL.Entities.Like");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId", "PostId")
+                        .IsUnique();
+
+                    b.ToTable("LikesToPosts");
                 });
 
             modelBuilder.Entity("DAL.Entities.Attach", b =>
@@ -232,6 +334,25 @@ namespace Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("DAL.Entities.BlackListItem", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "BlockedUser")
+                        .WithMany("BlockedByUsers")
+                        .HasForeignKey("BlockedUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithMany("BlockedUsers")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BlockedUser");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DAL.Entities.Comment", b =>
@@ -253,40 +374,21 @@ namespace Api.Migrations
                     b.Navigation("Post");
                 });
 
-            modelBuilder.Entity("DAL.Entities.LikeToComment", b =>
+            modelBuilder.Entity("DAL.Entities.MuteListItem", b =>
                 {
-                    b.HasOne("DAL.Entities.Comment", "Comment")
-                        .WithMany("Likes")
-                        .HasForeignKey("CommentId")
+                    b.HasOne("DAL.Entities.User", "MutedUser")
+                        .WithMany("MutedByUsers")
+                        .HasForeignKey("MutedUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("DAL.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("MutedUsers")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Comment");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("DAL.Entities.LikeToPost", b =>
-                {
-                    b.HasOne("DAL.Entities.Post", "Post")
-                        .WithMany("Likes")
-                        .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DAL.Entities.User", "User")
-                        .WithMany("LikedPosts")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Post");
+                    b.Navigation("MutedUser");
 
                     b.Navigation("User");
                 });
@@ -300,6 +402,36 @@ namespace Api.Migrations
                         .IsRequired();
 
                     b.Navigation("Author");
+                });
+
+            modelBuilder.Entity("DAL.Entities.Subscribe", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "Author")
+                        .WithMany("Followers")
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.User", "Follower")
+                        .WithMany("Subscribes")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Author");
+
+                    b.Navigation("Follower");
+                });
+
+            modelBuilder.Entity("DAL.Entities.UserConfig", b =>
+                {
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithOne("Config")
+                        .HasForeignKey("DAL.Entities.UserConfig", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("DAL.Entities.UserSession", b =>
@@ -347,6 +479,56 @@ namespace Api.Migrations
                     b.Navigation("Post");
                 });
 
+            modelBuilder.Entity("DAL.Entities.LikeToComment", b =>
+                {
+                    b.HasOne("DAL.Entities.Comment", "Comment")
+                        .WithMany("Likes")
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.Like", null)
+                        .WithOne()
+                        .HasForeignKey("DAL.Entities.LikeToComment", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("DAL.Entities.LikeToPost", b =>
+                {
+                    b.HasOne("DAL.Entities.Like", null)
+                        .WithOne()
+                        .HasForeignKey("DAL.Entities.LikeToPost", "Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.Post", "Post")
+                        .WithMany("Likes")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DAL.Entities.User", "User")
+                        .WithMany("LikedPosts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("DAL.Entities.Comment", b =>
                 {
                     b.Navigation("Likes");
@@ -365,11 +547,26 @@ namespace Api.Migrations
                 {
                     b.Navigation("Avatar");
 
+                    b.Navigation("BlockedByUsers");
+
+                    b.Navigation("BlockedUsers");
+
+                    b.Navigation("Config")
+                        .IsRequired();
+
+                    b.Navigation("Followers");
+
                     b.Navigation("LikedPosts");
+
+                    b.Navigation("MutedByUsers");
+
+                    b.Navigation("MutedUsers");
 
                     b.Navigation("Posts");
 
                     b.Navigation("Sessions");
+
+                    b.Navigation("Subscribes");
                 });
 #pragma warning restore 612, 618
         }
