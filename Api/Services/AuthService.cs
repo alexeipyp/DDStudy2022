@@ -41,7 +41,9 @@ namespace Api.Services
 
         public async Task<UserSession> GetSessionById(Guid id)
         {
-            var session = await _context.UserSessions.FirstOrDefaultAsync(x => x.Id == id);
+            var session = await _context.UserSessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (session == null)
             {
                 throw new InvalidSessionException();
@@ -51,7 +53,9 @@ namespace Api.Services
 
         private async Task<UserSession> GetSessionByRefreshTokenId(Guid id)
         {
-            var session = await _context.UserSessions.Include(x => x.User).FirstOrDefaultAsync(x => x.RefreshTokenId == id);
+            var session = await _context.UserSessions
+                .Include(x => x.User)
+                .FirstOrDefaultAsync(x => x.RefreshTokenId == id);
             if (session == null)
             {
                 throw new InvalidSessionException();
@@ -105,7 +109,9 @@ namespace Api.Services
 
         private async Task<DAL.Entities.User> GetUserByCredentials(string login, string pass)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == login.ToLower());
+            var user = await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Email.ToLower() == login.ToLower());
             if (user == null)
                 throw new UnauthorizedException("user not recognized");
 
@@ -123,7 +129,7 @@ namespace Api.Services
                 audience: _config.Audience,
                 notBefore: dtNow,
                 claims: new Claim[] {
-                    new Claim("id", session.User.Id.ToString()),
+                    new Claim("id", session.UserId.ToString()),
                     new Claim("sessionId", session.Id.ToString()),
                 },
                 expires: DateTime.Now.AddMinutes(_config.LifeTime),

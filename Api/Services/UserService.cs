@@ -92,12 +92,16 @@ namespace Api.Services
 
         private async Task<bool> CheckUserExist(string email)
         {
-            return await _context.Users.AnyAsync(x => x.Email.ToLower() == email.ToLower());
+            return await _context.Users
+                .AsNoTracking()
+                .AnyAsync(x => x.Email.ToLower() == email.ToLower());
         } 
 
         private async Task<DAL.Entities.User> GetUserWithAvatarById(Guid id)
         {
-            var user = await _context.Users.Include(x => x.Avatar).FirstOrDefaultAsync(x => x.Id == id);
+            var user = await _context.Users
+                .Include(x => x.Avatar)
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (user == null || user == default)
                 throw new UserNotFoundException();
 
@@ -110,6 +114,7 @@ namespace Api.Services
                 .Include(x => x.Posts)
                 .Include(x => x.Followers)
                 .Include(x => x.Subscribes)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == id);
             if (user == null || user == default)
                 throw new UserNotFoundException();

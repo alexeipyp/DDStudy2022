@@ -87,5 +87,17 @@ namespace Api.Controllers
                 throw new UnauthorizedException("you are not authorized");
         }
 
+        [HttpPost]
+        [Authorize]
+        public async Task ChangeCurrentUserPrivacy()
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                await _userService.ChangeUserPrivacy(userId);
+            }
+            else
+                throw new UnauthorizedException("you are not authorized");
+        }
     }
 }

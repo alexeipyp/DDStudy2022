@@ -45,7 +45,7 @@ namespace Api.Mapper
                 ;
 
             CreateMap<DAL.Entities.User, DAL.Entities.UserSession>()
-                .ForMember(d => d.User, m => m.MapFrom(s => s))
+                .ForMember(d => d.UserId, m => m.MapFrom(s => s.Id))
                 .ForMember(d => d.Created, m => m.MapFrom(s => DateTime.UtcNow))
                 .ForMember(d => d.Id, m => m.MapFrom(s => Guid.NewGuid()))
                 .ForMember(d => d.RefreshTokenId, m => m.MapFrom(s => Guid.NewGuid()))

@@ -45,6 +45,7 @@ namespace Api.Services
             var blackList = await _context.BlackList
                 .Where(x => x.UserId == userId)
                 .Include(x => x.BlockedUser).ThenInclude(x => x.Avatar)
+                .AsNoTracking()
                 .Select(x => _mapper.Map<UserAvatarModel>(x.BlockedUser))
                 .ToListAsync();
 
@@ -53,12 +54,16 @@ namespace Api.Services
 
         private async Task<bool> CheckUserExistInBlackList(Guid userId, Guid blockedUserId)
         {
-            return await _context.BlackList.AnyAsync(x => x.UserId == userId && x.BlockedUserId == blockedUserId);
+            return await _context.BlackList
+                .AsNoTracking()
+                .AnyAsync(x => x.UserId == userId && x.BlockedUserId == blockedUserId);
         }
 
         private async Task<DAL.Entities.BlackListItem> GetBlackListItemById(Guid userId, Guid blockedUserId)
         {
-            var blackListItem = await _context.BlackList.FirstOrDefaultAsync(x => x.UserId == userId && x.BlockedUserId == blockedUserId);
+            var blackListItem = await _context.BlackList
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.BlockedUserId == blockedUserId);
             if (blackListItem == null)
                 throw new NotFoundException("user in black list not found");
 

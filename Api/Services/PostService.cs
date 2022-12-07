@@ -41,7 +41,7 @@ namespace Api.Services
         public async Task CommentPost(Guid userId, CreateCommentPostRequest request)
         {
             var post = await GetPostById(request.PostId);
-            if (!(await _accessService.GetWriteAccessPermission(userId, post.AuthorId)))
+            if (!(await _accessService.GetWritePermission(userId, post.AuthorId)))
                 throw new ForbiddenException("no permission");
 
             var model = _mapper.Map<CreateCommentPostModel>(request, o => o.AfterMap((s, d) => d.AuthorId = userId));
@@ -53,7 +53,7 @@ namespace Api.Services
         public async Task LikePost(Guid userId, LikePostRequest request)
         {
             var post = await GetPostById(request.PostId);
-            if (!(await _accessService.GetWriteAccessPermission(userId, post.AuthorId)))
+            if (!(await _accessService.GetReadPermission(userId, post.AuthorId)))
                 throw new ForbiddenException("no permission");
             if (await CheckLikeToPostExist(userId, request.PostId))
                 throw new ForbiddenException("like already exists");
@@ -66,7 +66,7 @@ namespace Api.Services
         public async Task UndoLikeToPost(Guid userId, LikeToPostUndoRequest request)
         {
             var post = await GetPostById(request.PostId);
-            if (!(await _accessService.GetWriteAccessPermission(userId, post.AuthorId)))
+            if (!(await _accessService.GetReadPermission(userId, post.AuthorId)))
                 throw new ForbiddenException("no permission");
 
             var like = await GetLikeToPostById(userId, request.PostId);
@@ -77,7 +77,7 @@ namespace Api.Services
         public async Task LikeComment(Guid userId, LikeCommentRequest request)
         {
             var comment = await GetCommentWithPostById(request.CommentId);
-            if (!(await _accessService.GetWriteAccessPermission(userId, comment.Post.AuthorId)))
+            if (!(await _accessService.GetReadPermission(userId, comment.Post.AuthorId)))
                 throw new ForbiddenException("no permission");
             if (await CheckLikeToCommentExist(userId, request.CommentId))
                 throw new ForbiddenException("like already exists");
@@ -90,7 +90,7 @@ namespace Api.Services
         public async Task UndoLikeToComment(Guid userId, LikeToCommentUndoRequest request)
         {
             var comment = await GetCommentWithPostById(request.CommentId);
-            if (!(await _accessService.GetWriteAccessPermission(userId, comment.Post.AuthorId)))
+            if (!(await _accessService.GetReadPermission(userId, comment.Post.AuthorId)))
                 throw new ForbiddenException("no permission");
 
             var like = await GetLikeToCommentById(userId, request.CommentId);

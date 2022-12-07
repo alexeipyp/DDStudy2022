@@ -48,6 +48,7 @@ namespace Api.Services
             var mutedList = await _context.MuteList
                 .Where(x => x.UserId == userId)
                 .Include(x => x.MutedUser).ThenInclude(x => x.Avatar)
+                .AsNoTracking()
                 .Select(x => _mapper.Map<UserAvatarModel>(x.MutedUser))
                 .ToListAsync();
 
@@ -56,12 +57,16 @@ namespace Api.Services
 
         private async Task<bool> CheckUserExistInMuteList(Guid userId, Guid mutedUserId)
         {
-            return await _context.MuteList.AnyAsync(x => x.UserId == userId && x.MutedUserId == mutedUserId);
+            return await _context.MuteList
+                .AsNoTracking()
+                .AnyAsync(x => x.UserId == userId && x.MutedUserId == mutedUserId);
         }
 
         private async Task<DAL.Entities.MuteListItem> GetMuteListItemById(Guid userId, Guid mutedUserId)
         {
-            var muteListItem = await _context.MuteList.FirstOrDefaultAsync(x => x.UserId == userId && x.MutedUserId == mutedUserId);
+            var muteListItem = await _context.MuteList
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.MutedUserId == mutedUserId);
             if (muteListItem == null)
                 throw new NotFoundException("user in mute list not found");
 

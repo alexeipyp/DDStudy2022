@@ -27,8 +27,7 @@ namespace Api.Services
                 throw new ForbiddenException("not allowed to sub");
 
             var sub = _mapper.Map<DAL.Entities.Subscribe>(request, o => o.AfterMap((s, d) => d.FollowerId = userId));
-            if (!(await _accessService.GetInstantFollowPermission(request.AuthorId)))
-                sub.IsAccepted = false;
+            sub.IsAccepted = await _accessService.GetInstantFollowPermission(request.AuthorId);
 
             await _context.Subscribes.AddAsync(sub);
             await _context.SaveChangesAsync();
@@ -53,8 +52,8 @@ namespace Api.Services
             var subs = await _context.Subscribes
                 .Where(x => x.FollowerId == userId && x.IsAccepted)
                 .Include(x => x.Author).ThenInclude(x => x.Avatar)
-                .Select(x => _mapper.Map<UserAvatarModel>(x.Author))
                 .AsNoTracking()
+                .Select(x => _mapper.Map<UserAvatarModel>(x.Author))
                 .ToListAsync();
 
             return subs;
@@ -77,8 +76,8 @@ namespace Api.Services
             var requests = await _context.Subscribes
                 .Where(x => x.AuthorId == userId && !x.IsAccepted)
                 .Include(x => x.Follower).ThenInclude(x => x.Avatar)
-                .Select(x => _mapper.Map<UserAvatarModel>(x.Follower))
                 .AsNoTracking()
+                .Select(x => _mapper.Map<UserAvatarModel>(x.Follower))
                 .ToListAsync();
 
             return requests;
@@ -100,11 +99,11 @@ namespace Api.Services
 
         private async Task<DAL.Entities.Subscribe> GetSubscribeById(Guid authorId, Guid followerId, bool isSubRequest = false)
         {
-            var sub = await _context.Subscribes.AsNoTracking().FirstOrDefaultAsync(x => x.AuthorId == authorId && x.FollowerId == followerId && x.IsAccepted != isSubRequest);
+            var sub = await _context.Subscribes
+                .FirstOrDefaultAsync(x => x.AuthorId == authorId && x.FollowerId == followerId && x.IsAccepted != isSubRequest);
             if (sub == null)
                 throw new SubscribeNotFoundException();
             
-
             return sub;
         }
 
