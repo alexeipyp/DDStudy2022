@@ -180,18 +180,19 @@ namespace Api.Services
             var res = await _context.PostAttaches
                 .Include(x => x.Post)
                 .Join(_accessService.GetReadAccessPolicy(userId), x => x.Post.AuthorId, y => y, (x, y) => x)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == postAttachId);
             if (res == null)
-                throw new PostAttachNotFoundException("post attach not found");
+                throw new PostAttachNotFoundException();
 
             return _mapper.Map<AttachModel>(res);
         }
 
         private async Task<DAL.Entities.Post> GetPostById(Guid postId)
         {
-            var post = await _context.Posts.FirstOrDefaultAsync(x => x.Id == postId);
+            var post = await _context.Posts.AsNoTracking().FirstOrDefaultAsync(x => x.Id == postId);
             if (post == null)
-                throw new PostNotFoundException("post not found");
+                throw new PostNotFoundException();
 
             return post;
         }
@@ -200,16 +201,17 @@ namespace Api.Services
         {
             var comment = await _context.Comments
                 .Include(x => x.Post)
+                .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == commentId);
             if (comment == null)
-                throw new LikeNotFoundException("comment not found");
+                throw new LikeNotFoundException();
 
             return comment;
         }
 
         private async Task<DAL.Entities.LikeToPost> GetLikeToPostById(Guid userId, Guid postId)
         {
-            var like = await _context.LikesToPosts.FirstOrDefaultAsync(x => x.UserId == userId && x.PostId == postId);
+            var like = await _context.LikesToPosts.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId && x.PostId == postId);
             if (like == null)
                 throw new LikeNotFoundException("user wasn't liked this post");
 
@@ -218,7 +220,7 @@ namespace Api.Services
 
         private async Task<DAL.Entities.LikeToComment> GetLikeToCommentById(Guid userId, Guid commentId)
         {
-            var like = await _context.LikesToComments.FirstOrDefaultAsync(x => x.UserId == userId && x.CommentId == commentId);
+            var like = await _context.LikesToComments.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId && x.CommentId == commentId);
             if (like == null)
                 throw new LikeNotFoundException("user wasn't liked this comment");
 
@@ -227,12 +229,12 @@ namespace Api.Services
 
         private async Task<bool> CheckLikeToPostExist(Guid userId, Guid postId)
         {
-            return await _context.LikesToPosts.AnyAsync(x => x.UserId == userId && x.PostId == postId);
+            return await _context.LikesToPosts.AsNoTracking().AnyAsync(x => x.UserId == userId && x.PostId == postId);
         }
 
         private async Task<bool> CheckLikeToCommentExist(Guid userId, Guid commentId)
         {
-            return await _context.LikesToComments.AnyAsync(x => x.UserId == userId && x.CommentId == commentId);
+            return await _context.LikesToComments.AsNoTracking().AnyAsync(x => x.UserId == userId && x.CommentId == commentId);
         }
     }
 }

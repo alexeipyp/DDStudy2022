@@ -1,6 +1,6 @@
 ﻿using Common.CustomExceptions.BadRequestExceptions;
 using Common.CustomExceptions.ForbiddenExceptions;
-using Common.CustomExceptions.NotAuthorizedExceptions;
+using Common.CustomExceptions.UnauthorizedExceptions;
 using Common.CustomExceptions.NotFoundExceptions;
 using Microsoft.IdentityModel.Tokens;
 using System.Net;

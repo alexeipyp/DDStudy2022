@@ -4,7 +4,7 @@ using Api.Models.User;
 using AutoMapper;
 using Common.Consts;
 using Common.CustomExceptions.ForbiddenExceptions;
-using Common.CustomExceptions.NotAuthorizedExceptions;
+using Common.CustomExceptions.UnauthorizedExceptions;
 using Common.CustomExceptions.NotFoundExceptions;
 using DAL;
 using DAL.Entities;

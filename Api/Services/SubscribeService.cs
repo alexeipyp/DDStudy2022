@@ -54,6 +54,7 @@ namespace Api.Services
                 .Where(x => x.FollowerId == userId && x.IsAccepted)
                 .Include(x => x.Author).ThenInclude(x => x.Avatar)
                 .Select(x => _mapper.Map<UserAvatarModel>(x.Author))
+                .AsNoTracking()
                 .ToListAsync();
 
             return subs;
@@ -65,6 +66,7 @@ namespace Api.Services
                 .Where(x => x.AuthorId == userId && x.IsAccepted)
                 .Include(x => x.Follower).ThenInclude(x => x.Avatar)
                 .Select(x => _mapper.Map<UserAvatarModel>(x.Follower))
+                .AsNoTracking()
                 .ToListAsync();
 
             return followers;
@@ -76,6 +78,7 @@ namespace Api.Services
                 .Where(x => x.AuthorId == userId && !x.IsAccepted)
                 .Include(x => x.Follower).ThenInclude(x => x.Avatar)
                 .Select(x => _mapper.Map<UserAvatarModel>(x.Follower))
+                .AsNoTracking()
                 .ToListAsync();
 
             return requests;
@@ -97,11 +100,10 @@ namespace Api.Services
 
         private async Task<DAL.Entities.Subscribe> GetSubscribeById(Guid authorId, Guid followerId, bool isSubRequest = false)
         {
-            var sub = await _context.Subscribes.FirstOrDefaultAsync(x => x.AuthorId == authorId && x.FollowerId == followerId && x.IsAccepted != isSubRequest);
+            var sub = await _context.Subscribes.AsNoTracking().FirstOrDefaultAsync(x => x.AuthorId == authorId && x.FollowerId == followerId && x.IsAccepted != isSubRequest);
             if (sub == null)
-            {
-                throw new SubscribeNotFoundException("subscribe not found");
-            }
+                throw new SubscribeNotFoundException();
+            
 
             return sub;
         }

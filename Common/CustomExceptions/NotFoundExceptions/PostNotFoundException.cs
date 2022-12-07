@@ -10,6 +10,7 @@ namespace Common.CustomExceptions.NotFoundExceptions
     {
         public PostNotFoundException()
         {
+            Model = "Post";
         }
 
         public PostNotFoundException(string message)

@@ -4,6 +4,7 @@ using AutoMapper;
 using Common;
 using Common.CustomExceptions;
 using Common.CustomExceptions.ForbiddenExceptions;
+using Common.CustomExceptions.UnauthorizedExceptions;
 using Common.CustomExceptions.NotFoundExceptions;
 using DAL;
 using DAL.Entities;
@@ -30,7 +31,7 @@ namespace Api.Services
 
         public async Task<TokenModel> GetToken(string login, string password)
         {
-            var user = await GetUserByCredention(login, password);
+            var user = await GetUserByCredentials(login, password);
             var session = _mapper.Map<DAL.Entities.UserSession>(user);
             await _context.UserSessions.AddAsync(session);
 
@@ -43,7 +44,7 @@ namespace Api.Services
             var session = await _context.UserSessions.FirstOrDefaultAsync(x => x.Id == id);
             if (session == null)
             {
-                throw new SessionNotFoundException("session not found");
+                throw new InvalidSessionException();
             }
             return session;
         }
@@ -53,7 +54,7 @@ namespace Api.Services
             var session = await _context.UserSessions.Include(x => x.User).FirstOrDefaultAsync(x => x.RefreshTokenId == id);
             if (session == null)
             {
-                throw new SessionNotFoundException("session not found");
+                throw new InvalidSessionException();
             }
             return session;
         }
@@ -88,7 +89,7 @@ namespace Api.Services
                 var session = await GetSessionByRefreshTokenId(refreshTokenId);
                 if (!session.IsActive)
                 {
-                    throw new SessionNotActiveException("session not active");
+                    throw new InvalidSessionException();
                 }
 
                 session.RefreshTokenId = Guid.NewGuid();
@@ -102,14 +103,14 @@ namespace Api.Services
             }
         }
 
-        private async Task<DAL.Entities.User> GetUserByCredention(string login, string pass)
+        private async Task<DAL.Entities.User> GetUserByCredentials(string login, string pass)
         {
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Email.ToLower() == login.ToLower());
             if (user == null)
-                throw new UserNotFoundException("user not found");
+                throw new UnauthorizedException("user not recognized");
 
             if (!HashHelper.Verify(pass, user.PasswordHash))
-                throw new UserNotFoundException("user not found");
+                throw new UnauthorizedException("user not recognized");
 
             return user;
         }

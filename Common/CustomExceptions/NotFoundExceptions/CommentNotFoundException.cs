@@ -10,6 +10,7 @@ namespace Common.CustomExceptions.NotFoundExceptions
     {
         public CommentNotFoundException()
         {
+            Model = "Comment";
         }
 
         public CommentNotFoundException(string message)

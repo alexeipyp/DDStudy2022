@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Api.Services;
 using Api.Models.User;
-using Common.CustomExceptions.NotAuthorizedExceptions;
+using Common.CustomExceptions.UnauthorizedExceptions;
 
 namespace Api.Controllers
 {

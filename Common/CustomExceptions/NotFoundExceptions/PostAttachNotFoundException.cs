@@ -10,6 +10,7 @@ namespace Common.CustomExceptions.NotFoundExceptions
     {
         public PostAttachNotFoundException()
         {
+            Model = "Post attach";
         }
 
         public PostAttachNotFoundException(string message)

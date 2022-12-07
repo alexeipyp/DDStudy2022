@@ -50,19 +50,25 @@ namespace Api.Services
             } 
         }
 
-        public async Task<List<UserAvatarModel>> GetUsers()
-        {
-            return await _context.Users.AsNoTracking()
-                .Include(x => x.Avatar)
-                .Select(x => _mapper.Map<UserAvatarModel>(x))
-                .ToListAsync();
-        }
-
-        public async Task<UserAvatarModel> GetUser (Guid id)
+        public async Task<UserAvatarModel> GetUserBrief (Guid id)
         {
             var user = await GetUserWithAvatarById(id);
 
             return _mapper.Map<UserAvatarModel>(user);
+        }
+
+        public async Task<UserAvatarProfileModel> GetUserProfile(Guid id)
+        {
+            var user = await GetUserWithAvatarById(id);
+
+            return _mapper.Map<UserAvatarProfileModel>(user);
+        }
+
+        public async Task<UserActivityModel> GetUserActivity(Guid id)
+        {
+            var user = await GetUserWithPostsAndFollowersAndSubsById(id);
+
+            return _mapper.Map<UserActivityModel>(user);
         }
 
         public async Task AddAvatarToUser(Guid userId, MetadataModel model)
@@ -89,20 +95,24 @@ namespace Api.Services
             return await _context.Users.AnyAsync(x => x.Email.ToLower() == email.ToLower());
         } 
 
-        private async Task<DAL.Entities.User> GetUserById(Guid id)
+        private async Task<DAL.Entities.User> GetUserWithAvatarById(Guid id)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == id);
-            if (user == null)
-                throw new UserNotFoundException("user not found");
+            var user = await _context.Users.Include(x => x.Avatar).FirstOrDefaultAsync(x => x.Id == id);
+            if (user == null || user == default)
+                throw new UserNotFoundException();
 
             return user;
         }
 
-        private async Task<DAL.Entities.User> GetUserWithAvatarById(Guid id)
+        private async Task<DAL.Entities.User> GetUserWithPostsAndFollowersAndSubsById(Guid id)
         {
-            var user = await _context.Users.Include(x => x.Avatar).FirstOrDefaultAsync(x => x.Id == id);
-            if (user == null)
-                throw new UserNotFoundException("user not found");
+            var user = await _context.Users
+                .Include(x => x.Posts)
+                .Include(x => x.Followers)
+                .Include(x => x.Subscribes)
+                .FirstOrDefaultAsync(x => x.Id == id);
+            if (user == null || user == default)
+                throw new UserNotFoundException();
 
             return user;
         }

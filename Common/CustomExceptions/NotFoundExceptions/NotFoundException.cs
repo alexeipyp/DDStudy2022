@@ -8,6 +8,10 @@ namespace Common.CustomExceptions.NotFoundExceptions
 {
     public class NotFoundException : Exception
     {
+        public string? Model { get; set; }
+
+        public override string Message => $"{Model} is not found";
+        
         public NotFoundException()
         {
         }

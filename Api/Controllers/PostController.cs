@@ -8,7 +8,7 @@ using Common.Extentions;
 using Common.Consts;
 using Api.Models.Likes;
 using Common.CustomExceptions;
-using Common.CustomExceptions.NotAuthorizedExceptions;
+using Common.CustomExceptions.UnauthorizedExceptions;
 
 namespace Api.Controllers
 {

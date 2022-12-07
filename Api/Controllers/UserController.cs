@@ -13,7 +13,7 @@ using Common.Consts;
 using System.Runtime.CompilerServices;
 using Api.Models.User;
 using Api.Models.Attachments;
-using Common.CustomExceptions.NotAuthorizedExceptions;
+using Common.CustomExceptions.UnauthorizedExceptions;
 
 namespace Api.Controllers
 {
@@ -50,20 +50,42 @@ namespace Api.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<List<UserAvatarModel>> GetUsers() => await _userService.GetUsers();
-
-        [HttpGet]
-        [Authorize]
         public async Task<UserAvatarModel> GetCurrentUser()
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                return await _userService.GetUser(userId);
+                return await _userService.GetUserBrief(userId);
             }
             else
                 throw new UnauthorizedException("you are not authorized");
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<UserAvatarProfileModel> GetCurrentUserProfile()
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                return await _userService.GetUserProfile(userId);
             }
+            else
+                throw new UnauthorizedException("you are not authorized");
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<UserActivityModel> GetCurrentUserActivity()
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                return await _userService.GetUserActivity(userId);
+            }
+            else
+                throw new UnauthorizedException("you are not authorized");
+        }
 
     }
 }

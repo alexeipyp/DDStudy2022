@@ -6,18 +6,20 @@ using System.Threading.Tasks;
 
 namespace Common.CustomExceptions.UnauthorizedExceptions
 {
-    public class UnauthorizedException : Exception
+    public class InvalidSessionException : UnauthorizedException
     {
-        public UnauthorizedException()
+        public override string Message => "Invalid session";
+
+        public InvalidSessionException()
         {
         }
 
-        public UnauthorizedException(string message)
+        public InvalidSessionException(string message)
             : base(message)
         {
         }
 
-        public UnauthorizedException(string message, Exception inner)
+        public InvalidSessionException(string message, Exception inner)
             : base(message, inner)
         {
         }

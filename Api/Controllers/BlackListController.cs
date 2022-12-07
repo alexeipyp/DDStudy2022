@@ -2,7 +2,7 @@
 using Api.Models.User;
 using Api.Services;
 using Common.Consts;
-using Common.CustomExceptions.NotAuthorizedExceptions;
+using Common.CustomExceptions.UnauthorizedExceptions;
 using Common.Extentions;
 using DAL.Entities;
 using Microsoft.AspNetCore.Authorization;

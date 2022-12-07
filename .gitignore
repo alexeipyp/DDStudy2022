@@ -364,3 +364,4 @@ FodyWeavers.xsd
 
 # DDStudy - attaches folder
 ./Api/attaches/
+/Api/attaches

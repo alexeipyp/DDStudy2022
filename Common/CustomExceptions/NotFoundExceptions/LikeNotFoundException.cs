@@ -10,6 +10,7 @@ namespace Common.CustomExceptions.NotFoundExceptions
     {
         public LikeNotFoundException()
         {
+            Model = "Like";
         }
 
         public LikeNotFoundException(string message)

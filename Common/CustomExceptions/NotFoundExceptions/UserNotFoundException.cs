@@ -10,6 +10,7 @@ namespace Common.CustomExceptions.NotFoundExceptions
     {
         public UserNotFoundException()
         {
+            Model = "User";
         }
 
         public UserNotFoundException(string message)

@@ -10,6 +10,7 @@ namespace Common.CustomExceptions.NotFoundExceptions
     {
         public SubscribeNotFoundException()
         {
+            Model = "Subscribe";
         }
 
         public SubscribeNotFoundException(string message)

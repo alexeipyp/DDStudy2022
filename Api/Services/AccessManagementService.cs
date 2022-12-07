@@ -16,19 +16,11 @@ namespace Api.Services
         public IQueryable<Guid> GetReadAccessPolicy(Guid userId)
         {
             return _context.Users.Where(x =>
-            (x.Id == userId
-                ||
-                (!x.BlockedUsers!.Any(author => author.BlockedUserId == userId)
-                    &&
-                !x.BlockedByUsers!.Any(author => author.UserId == userId)
-                    &&
-                    (
-                        (!x.Config.IsPrivate)
-                        ||
-                        (x.Followers!.Any(author => author.FollowerId == userId && author.IsAccepted))
-                    )
-                )
-            ))
+            x.Id == userId
+            || !x.BlockedUsers!.Any(author => author.BlockedUserId == userId)
+                && !x.BlockedByUsers!.Any(author => author.UserId == userId)
+                && (!x.Config.IsPrivate
+                   || x.Followers!.Any(author => author.FollowerId == userId && author.IsAccepted)))
             .Select(x => x.Id);
         }
 
@@ -36,30 +28,19 @@ namespace Api.Services
         {
             return _context.Users.Where(x =>
                 x.Followers!.Any(author => author.FollowerId == userId && author.IsAccepted))
-                .Select(x => x.Id)
-                ;
+                .Select(x => x.Id);
         }
 
         public async Task<bool> GetWriteAccessPermission(Guid userId, Guid authorId)
         {
             return await _context.Users.AnyAsync(x =>
-            (x.Id == userId
-                ||
-            x.Id == authorId
-                &&
-                (!x.BlockedUsers!.Any(author => author.BlockedUserId == userId)
-                    &&
-                !x.BlockedByUsers!.Any(author => author.UserId == userId)
-                    &&
-                !x.MutedUsers!.Any(author => author.MutedUserId == userId)
-                    &&
-                    (
-                        (!x.Config.IsPrivate)
-                        ||
-                        (x.Followers!.Any(author => author.FollowerId == userId && author.IsAccepted))
-                    )
-                )
-            ));
+            x.Id == userId
+            || x.Id == authorId
+                && !x.BlockedUsers!.Any(author => author.BlockedUserId == userId)
+                && !x.BlockedByUsers!.Any(author => author.UserId == userId)
+                && !x.MutedUsers!.Any(author => author.MutedUserId == userId)
+                && (!x.Config.IsPrivate
+                    || x.Followers!.Any(author => author.FollowerId == userId && author.IsAccepted)));
         }
 
         public async Task<bool> GetInstantFollowPermission(Guid authorId)
@@ -69,10 +50,10 @@ namespace Api.Services
 
         public async Task<bool> GetFollowPermission(Guid userId, Guid followingUserId)
         {
-            return await _context.Users
-                .AnyAsync(x => x.Id == userId
-                            && !x.BlockedUsers!.Any(user => user.BlockedUserId == followingUserId && user.UserId == userId) 
-                            && !x.BlockedByUsers!.Any(user => user.UserId == followingUserId && user.BlockedUserId == userId));
+            return await _context.Users.AnyAsync(x =>
+            x.Id == userId
+            && !x.BlockedUsers!.Any(user => user.BlockedUserId == followingUserId && user.UserId == userId)
+            && !x.BlockedByUsers!.Any(user => user.UserId == followingUserId && user.BlockedUserId == userId));
         }
     }
 }

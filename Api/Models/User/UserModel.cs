@@ -4,15 +4,18 @@
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = null!;
-        public string Email { get; set; } = null!;
-        public DateTimeOffset BirthDate { get; set; }
 
     }
 
-    public class UserAvatarModel
+    public class UserAvatarModel : UserModel
     {
-        public Guid Id { get; set; }
-        public string Name { get; set; } = null!;
         public string? AvatarLink { get; set; }
+    }
+
+    public class UserAvatarProfileModel : UserAvatarModel
+    {
+        public string Email { get; set; } = null!;
+        public DateTimeOffset BirthDate { get; set; }
+
     }
 }

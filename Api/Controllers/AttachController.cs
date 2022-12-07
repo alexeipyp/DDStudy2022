@@ -7,7 +7,7 @@ using Api.Models.Attachments;
 using DAL.Entities;
 using Common.Extentions;
 using Common.Consts;
-using Common.CustomExceptions.NotAuthorizedExceptions;
+using Common.CustomExceptions.UnauthorizedExceptions;
 
 namespace Api.Controllers
 {

@@ -25,7 +25,18 @@ namespace Api.Mapper
                 .ForMember(d => d.IsPrivate, m => m.MapFrom(s => false))
                 ;
 
-            CreateMap<DAL.Entities.User, UserModel>();
+            CreateMap<DAL.Entities.User, UserAvatarModel>()
+                .AfterMap<UserAvatarMapperAction>()
+                ;
+            CreateMap<DAL.Entities.User, UserAvatarProfileModel>()
+                .IncludeBase<DAL.Entities.User, UserAvatarModel>()
+                ;
+            CreateMap<DAL.Entities.User, UserActivityModel>()
+                .ForMember(d => d.PostsAmount, m => m.MapFrom(s => s.Posts!.Count))
+                .ForMember(d => d.FollowersAmount, m => m.MapFrom(s => s.Followers!.Count))
+                .ForMember(d => d.FollowingAmount, m => m.MapFrom(s => s.Subscribes!.Count))
+                ;
+
             CreateMap<DAL.Entities.Avatar, AttachModel>();
 
             CreateMap<DAL.Entities.PostAttach, AttachModel>();
@@ -72,9 +83,6 @@ namespace Api.Mapper
                 .ForMember(d => d.LikesAmount, m => m.MapFrom(s => s.Likes!.Count))
                 ;
 
-            CreateMap<DAL.Entities.User, UserAvatarModel>()
-                .AfterMap<UserAvatarMapperAction>()
-                ;
             CreateMap<DAL.Entities.Post, PostModel>()
                 .ForMember(d => d.Attaches, m => m.MapFrom(s => s.PostAttaches))
                 .ForMember(d => d.CommentsAmount, m => m.MapFrom(s => s.Comments!.Count))
