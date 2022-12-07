@@ -68,6 +68,10 @@ namespace DAL
             modelBuilder.Entity<Attach>().UseTptMappingStrategy();
             modelBuilder.Entity<Like>().UseTptMappingStrategy();
 
+            modelBuilder
+               .Entity<UserActivity>()
+               .ToView("UsersActivity")
+               .HasKey(t => t.Id);
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
             => optionsBuilder.UseNpgsql(b => b.MigrationsAssembly("Api"));
@@ -86,5 +90,6 @@ namespace DAL
         public DbSet<BlackListItem> BlackList => Set<BlackListItem>();
         public DbSet<MuteListItem> MuteList => Set<MuteListItem>();
         public DbSet<UserConfig> UsersConfigs => Set<UserConfig>(); 
+        public DbSet<UserActivity> UsersActivity => Set<UserActivity>();
     }
 }

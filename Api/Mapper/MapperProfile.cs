@@ -31,11 +31,7 @@ namespace Api.Mapper
             CreateMap<DAL.Entities.User, UserAvatarProfileModel>()
                 .IncludeBase<DAL.Entities.User, UserAvatarModel>()
                 ;
-            CreateMap<DAL.Entities.User, UserActivityModel>()
-                .ForMember(d => d.PostsAmount, m => m.MapFrom(s => s.Posts!.Count))
-                .ForMember(d => d.FollowersAmount, m => m.MapFrom(s => s.Followers!.Count))
-                .ForMember(d => d.FollowingAmount, m => m.MapFrom(s => s.Subscribes!.Count))
-                ;
+            CreateMap<DAL.Entities.UserActivity, UserActivityModel>();
 
             CreateMap<DAL.Entities.Avatar, AttachModel>();
 

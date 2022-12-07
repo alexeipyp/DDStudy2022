@@ -66,9 +66,9 @@ namespace Api.Services
 
         public async Task<UserActivityModel> GetUserActivity(Guid id)
         {
-            var user = await GetUserWithPostsAndFollowersAndSubsById(id);
+            var userActivity = await _context.UsersActivity.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
 
-            return _mapper.Map<UserActivityModel>(user);
+            return _mapper.Map<UserActivityModel>(userActivity);
         }
 
         public async Task AddAvatarToUser(Guid userId, MetadataModel model)
