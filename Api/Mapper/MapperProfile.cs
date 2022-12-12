@@ -8,6 +8,7 @@ using Api.Models.Subscribes;
 using Api.Models.User;
 using AutoMapper;
 using Common;
+using DAL.Entities;
 
 namespace Api.Mapper
 {
@@ -81,9 +82,15 @@ namespace Api.Mapper
 
             CreateMap<DAL.Entities.Post, PostModel>()
                 .ForMember(d => d.Attaches, m => m.MapFrom(s => s.PostAttaches))
-                .ForMember(d => d.CommentsAmount, m => m.MapFrom(s => s.Comments!.Count))
-                .ForMember(d => d.LikesAmount, m => m.MapFrom(s => s.Likes!.Count))
                 ;
+
+            CreateMap<DAL.Entities.Post, DAL.Entities.PostWithStats>();
+            CreateMap<DAL.Entities.PostStats, DAL.Entities.PostWithStats>()
+                .ForMember(d => d.Stats, m => m.MapFrom(s => s))
+                ;
+            CreateMap<DAL.Entities.PostWithStats, PostModel>()
+                .IncludeBase<DAL.Entities.Post, PostModel>();
+            CreateMap<DAL.Entities.PostStats, PostStatsModel>();
 
             CreateMap<LikePostRequest, DAL.Entities.LikeToPost>()
                 .ForMember(d => d.Created, m => m.MapFrom(s => DateTime.UtcNow))

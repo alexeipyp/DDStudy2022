@@ -100,61 +100,24 @@ namespace Api.Services
 
         public async Task<IEnumerable<PostModel>> GetFeed(Guid userId, int skip, int take)
         {
-            var posts = await _context.Posts
-                .Join(_accessService.GetReadAccessPolicy(userId), x => x.AuthorId, y => y, (x, y) => x)
-                .Where(x => x.AuthorId != userId)
-                .Include(x => x.Author)
-                .ThenInclude(x => x.Avatar)
-                .Include(x => x.PostAttaches)
-                .Include(x => x.Comments)
-                .Include(x => x.Likes)
-                .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
-                .ToListAsync();
-            
-            var res = posts
-                .Select(x => _mapper.Map<DAL.Entities.Post, PostModel>(x, o => o.AfterMap((s, d) => d.IsLiked = s.Likes!.Any(x => x.UserId == userId))))
-                .ToList();
+            var accessPolicy = _accessService.GetFeedAccessPolicy(userId);
+            var posts = await GetPostsAllowedToUser(userId, accessPolicy, skip, take);
 
-            return res;
+            return posts;
         }
-
         public async Task<IEnumerable<PostModel>> GetSubscriptionsFeed(Guid userId, int skip, int take)
         {
-            var posts = await _context.Posts
-                .Join(_accessService.GetFollowerAccessPolicy(userId), x => x.AuthorId, y => y, (x, y) => x)
-                .Include(x => x.Author)
-                .ThenInclude(x => x.Avatar)
-                .Include(x => x.PostAttaches)
-                .Include(x => x.Comments)
-                .Include(x => x.Likes)
-                .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
-                .ToListAsync();
+            var accessPolicy = _accessService.GetFollowerAccessPolicy(userId);
+            var posts = await GetPostsAllowedToUser(userId, accessPolicy, skip, take);
 
-            var res = posts
-                .Select(x => _mapper.Map<DAL.Entities.Post, PostModel>(x, o => o.AfterMap((s, d) => d.IsLiked = s.Likes!.Any(x => x.UserId == userId))))
-                .ToList();
-
-            return res;
+            return posts;
         }
-
         public async Task<IEnumerable<PostModel>> GetUserPosts(Guid userId, Guid userToVisitId, int skip, int take)
         {
-            var posts = await _context.Posts
-                .Join(_accessService.GetReadAccessPolicy(userId), x => x.AuthorId, y => y, (x, y) => x)
-                .Where(x => x.AuthorId == userToVisitId)
-                .Include(x => x.Author)
-                .ThenInclude(x => x.Avatar)
-                .Include(x => x.PostAttaches)
-                .Include(x => x.Comments)
-                .Include(x => x.Likes)
-                .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
-                .ToListAsync();
+            var accessPolicy = _accessService.GetUserPostsAccessPolicy(userId, userToVisitId);
+            var posts = await GetPostsAllowedToUser(userId, accessPolicy, skip, take);
 
-            var res = posts
-                .Select(x => _mapper.Map<DAL.Entities.Post, PostModel>(x, o => o.AfterMap((s, d) => d.IsLiked = s.Likes!.Any(x => x.UserId == userId))))
-                .ToList();
-
-            return res;
+            return posts;
         }
 
         public async Task<IEnumerable<CommentModel>> GetComments(Guid userId, Guid postId, int skip, int take)
@@ -169,7 +132,7 @@ namespace Api.Services
                 .ToListAsync();
 
             var res = comments
-                .Select(x => _mapper.Map<DAL.Entities.Comment, CommentModel>(x, o => o.AfterMap((s, d) => d.IsLiked = s.Likes!.Any(x => x.UserId == userId))))
+                .Select(x => _mapper.Map<DAL.Entities.Comment, CommentModel>(x))
                 .ToList();
 
             return res;
@@ -195,6 +158,28 @@ namespace Api.Services
                 throw new PostNotFoundException();
 
             return post;
+        }
+
+        private async Task<IEnumerable<PostModel>> GetPostsAllowedToUser(Guid userId, IQueryable<Guid> accessPolicy, int skip, int take)
+        {
+            var posts = await _context.Posts
+                .Join(accessPolicy, x => x.AuthorId, y => y, (x, y) => x)
+                .Include(x => x.Author)
+                .ThenInclude(x => x.Avatar)
+                .Include(x => x.PostAttaches)
+                .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
+                .ToListAsync();
+
+            var postsStats = await _context.PostsStats.AsNoTracking().ToListAsync();
+            var likedPostIds = await GetLikedPostIdsByUserId(userId);
+            var postsWithStats = posts.Join(postsStats, x => x.Id, y => y.Id,
+                (x, y) => _mapper.Map(y, _mapper.Map<DAL.Entities.PostWithStats>(x)))
+                .Select(x => _mapper.Map<PostModel>(x, o => o.AfterMap((s, d) =>
+                {
+                    d.Stats.IsLiked = likedPostIds.Contains(d.Id);
+                })));
+
+            return postsWithStats;
         }
 
         private async Task<DAL.Entities.Comment> GetCommentWithPostById(Guid commentId)
@@ -225,6 +210,17 @@ namespace Api.Services
                 throw new LikeNotFoundException("user wasn't liked this comment");
 
             return like;
+        }
+
+        private async Task<List<Guid>> GetLikedPostIdsByUserId(Guid userId)
+        {
+            var likes = await _context.LikesToPosts
+                .AsNoTracking()
+                .Where(x => x.UserId == userId)
+                .Select(x => x.PostId)
+                .ToListAsync();
+
+            return likes;
         }
 
         private async Task<bool> CheckLikeToPostExist(Guid userId, Guid postId)

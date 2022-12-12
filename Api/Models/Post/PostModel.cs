@@ -11,8 +11,6 @@ namespace Api.Models.Post
         public UserAvatarModel Author { get; set; } = null!;
         public List<AttachWithLinkModel>? Attaches { get; set; } = new List<AttachWithLinkModel>();
         public DateTimeOffset UploadDate { get; set; }
-        public long CommentsAmount { get; set; }
-        public long LikesAmount { get; set; }
-        public bool IsLiked { get; set; }
+        public PostStatsModel Stats { get; set; } = null!;
     }
 }

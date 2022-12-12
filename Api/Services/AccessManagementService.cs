@@ -24,6 +24,32 @@ namespace Api.Services
             return policyQuery.Select(x => x.Id);
         }
 
+        public IQueryable<Guid> GetFeedAccessPolicy(Guid userId)
+        {
+            var policyQuery = _context.Users.AsQueryable();
+            // Исключаем аккаунты, которые заблокировал текущий пользователь, или которые заблокировали текущего пользователя
+            policyQuery = policyQuery.Where(x => !x.BlockedUsers!.Any(author => author.BlockedUserId == userId) && !x.BlockedByUsers!.Any(author => author.UserId == userId));
+            // Исключаем приватные аккаунты, на которые текущий пользователь не подписан, кроме аккаунта текущего пользователя
+            policyQuery = policyQuery.Where(x => x.Id == userId || (!x.Config.IsPrivate || x.Followers!.Any(author => author.FollowerId == userId && author.IsAccepted)));
+            // Исключаем аккаунт текущего пользователя
+            policyQuery = policyQuery.Where(x => x.Id != userId);
+
+            return policyQuery.Select(x => x.Id);
+        }
+
+        public IQueryable<Guid> GetUserPostsAccessPolicy(Guid userId, Guid userToVisitId)
+        {
+            var policyQuery = _context.Users.AsQueryable();
+            // Исключаем все аккаунты, кроме запрашиваемого пользователя
+            policyQuery = policyQuery.Where(x => x.Id == userToVisitId);
+            // Исключаем аккаунты, которые заблокировал текущий пользователь, или которые заблокировали текущего пользователя
+            policyQuery = policyQuery.Where(x => !x.BlockedUsers!.Any(author => author.BlockedUserId == userId) && !x.BlockedByUsers!.Any(author => author.UserId == userId));
+            // Исключаем приватные аккаунты, на которые текущий пользователь не подписан, кроме аккаунта текущего пользователя
+            policyQuery = policyQuery.Where(x => x.Id == userId || (!x.Config.IsPrivate || x.Followers!.Any(author => author.FollowerId == userId && author.IsAccepted)));
+
+            return policyQuery.Select(x => x.Id);
+        }
+
         public IQueryable<Guid> GetFollowerAccessPolicy(Guid userId)
         {
             var policyQuery = _context.Users.AsQueryable();

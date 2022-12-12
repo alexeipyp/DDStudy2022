@@ -11,6 +11,8 @@ namespace DAL
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Ignore<PostWithStats>();
+
             modelBuilder
                 .Entity<User>()
                 .HasIndex(f => f.Email)
@@ -72,6 +74,10 @@ namespace DAL
                .Entity<UserActivity>()
                .ToView("UsersActivity")
                .HasKey(t => t.Id);
+            modelBuilder
+               .Entity<PostStats>()
+               .ToView("PostsStats")
+               .HasKey(t => t.Id);
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
             => optionsBuilder.UseNpgsql(b => b.MigrationsAssembly("Api"));
@@ -91,5 +97,6 @@ namespace DAL
         public DbSet<MuteListItem> MuteList => Set<MuteListItem>();
         public DbSet<UserConfig> UsersConfigs => Set<UserConfig>(); 
         public DbSet<UserActivity> UsersActivity => Set<UserActivity>();
+        public DbSet<PostStats> PostsStats => Set<PostStats>();
     }
 }

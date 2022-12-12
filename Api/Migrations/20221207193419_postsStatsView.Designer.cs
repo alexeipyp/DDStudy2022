@@ -3,6 +3,7 @@ using System;
 using DAL;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Api.Migrations
 {
     [DbContext(typeof(DataContext))]
-    partial class DataContextModelSnapshot : ModelSnapshot
+    [Migration("20221207193419_postsStatsView")]
+    partial class postsStatsView
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -50,7 +53,7 @@ namespace Api.Migrations
 
                     b.HasIndex("AuthorId");
 
-                    b.ToTable("Attaches", (string)null);
+                    b.ToTable("Attaches");
 
                     b.UseTptMappingStrategy();
                 });
@@ -73,7 +76,7 @@ namespace Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BlackList", (string)null);
+                    b.ToTable("BlackList");
                 });
 
             modelBuilder.Entity("DAL.Entities.Comment", b =>
@@ -101,7 +104,7 @@ namespace Api.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("Comments", (string)null);
+                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("DAL.Entities.Like", b =>
@@ -115,7 +118,7 @@ namespace Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Likes", (string)null);
+                    b.ToTable("Likes");
 
                     b.UseTptMappingStrategy();
                 });
@@ -138,7 +141,7 @@ namespace Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("MuteList", (string)null);
+                    b.ToTable("MuteList");
                 });
 
             modelBuilder.Entity("DAL.Entities.Post", b =>
@@ -160,7 +163,7 @@ namespace Api.Migrations
 
                     b.HasIndex("AuthorId");
 
-                    b.ToTable("Posts", (string)null);
+                    b.ToTable("Posts");
                 });
 
             modelBuilder.Entity("DAL.Entities.PostStats", b =>
@@ -238,7 +241,7 @@ namespace Api.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("DAL.Entities.UserActivity", b =>
@@ -272,7 +275,7 @@ namespace Api.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("UsersConfigs", (string)null);
+                    b.ToTable("UsersConfigs");
                 });
 
             modelBuilder.Entity("DAL.Entities.UserSession", b =>
@@ -297,7 +300,7 @@ namespace Api.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserSessions", (string)null);
+                    b.ToTable("UserSessions");
                 });
 
             modelBuilder.Entity("DAL.Entities.Avatar", b =>
@@ -310,7 +313,7 @@ namespace Api.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Avatars", (string)null);
+                    b.ToTable("Avatars");
                 });
 
             modelBuilder.Entity("DAL.Entities.PostAttach", b =>
@@ -322,7 +325,7 @@ namespace Api.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("PostAttaches", (string)null);
+                    b.ToTable("PostAttaches");
                 });
 
             modelBuilder.Entity("DAL.Entities.LikeToComment", b =>
@@ -340,7 +343,7 @@ namespace Api.Migrations
                     b.HasIndex("UserId", "CommentId")
                         .IsUnique();
 
-                    b.ToTable("LikesToComments", (string)null);
+                    b.ToTable("LikesToComments");
                 });
 
             modelBuilder.Entity("DAL.Entities.LikeToPost", b =>
@@ -358,7 +361,7 @@ namespace Api.Migrations
                     b.HasIndex("UserId", "PostId")
                         .IsUnique();
 
-                    b.ToTable("LikesToPosts", (string)null);
+                    b.ToTable("LikesToPosts");
                 });
 
             modelBuilder.Entity("DAL.Entities.Attach", b =>
