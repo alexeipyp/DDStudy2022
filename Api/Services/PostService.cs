@@ -122,20 +122,25 @@ namespace Api.Services
 
         public async Task<IEnumerable<CommentModel>> GetComments(Guid userId, Guid postId, int skip, int take)
         {
+            var accessPolicy = _accessService.GetReadAccessPolicy(userId);
             var comments = await _context.Comments
                 .Where(x => x.PostId == postId)
                 .Include(x => x.Post)
-                .Join(_accessService.GetReadAccessPolicy(userId), x => x.Post.AuthorId, y => y, (x, y) => x)
+                .Join(accessPolicy, x => x.Post.AuthorId, y => y, (x, y) => x)
                 .Include(x => x.Author).ThenInclude(x => x.Avatar)
-                .Include(x => x.Likes)
                 .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
                 .ToListAsync();
 
-            var res = comments
-                .Select(x => _mapper.Map<DAL.Entities.Comment, CommentModel>(x))
-                .ToList();
+            var commentsStats = await _context.CommentsStats.AsNoTracking().Where(x => x.PostId == postId).ToListAsync();
+            var likedCommentIds = await GetLikedCommentIdsByUserId(userId, postId);
+            var commentsWithStats = comments.Join(commentsStats, x => x.Id, y => y.Id,
+                (x, y) => _mapper.Map(y, _mapper.Map<DAL.Entities.CommentWithStats>(x)))
+                .Select(x => _mapper.Map<CommentModel>(x, o => o.AfterMap((s, d) =>
+                {
+                    d.Stats.IsLiked = likedCommentIds.Contains(d.Id);
+                })));
 
-            return res;
+            return commentsWithStats;
         }
 
         public async Task<AttachModel> GetPostAttach(Guid userId, Guid postAttachId)
@@ -218,6 +223,18 @@ namespace Api.Services
                 .AsNoTracking()
                 .Where(x => x.UserId == userId)
                 .Select(x => x.PostId)
+                .ToListAsync();
+
+            return likes;
+        }
+
+        private async Task<List<Guid>> GetLikedCommentIdsByUserId(Guid userId, Guid postId)
+        {
+            var likes = await _context.LikesToComments
+                .Include(x => x.Comment)
+                .AsNoTracking()
+                .Where(x => x.UserId == userId && x.Comment.PostId == postId)
+                .Select(x => x.CommentId)
                 .ToListAsync();
 
             return likes;

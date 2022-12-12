@@ -76,21 +76,31 @@ namespace Api.Mapper
             CreateMap<CreateCommentPostModel, DAL.Entities.Comment>()
                 .ForMember(d => d.UploadDate, m => m.MapFrom(s => DateTime.UtcNow))
                 ;
-            CreateMap<DAL.Entities.Comment, CommentModel>()
-                .ForMember(d => d.LikesAmount, m => m.MapFrom(s => s.Likes!.Count))
-                ;
 
+            // Map Comments & Comments stats from DB to Models
+            CreateMap<DAL.Entities.Comment, CommentModel>();
+            CreateMap<DAL.Entities.Comment, DAL.Entities.CommentWithStats>();
+            CreateMap<DAL.Entities.CommentStats, DAL.Entities.CommentWithStats>()
+                .ForMember(d => d.Stats, m => m.MapFrom(s => s))
+                ;
+            CreateMap<DAL.Entities.CommentWithStats, CommentModel>()
+                .IncludeBase<DAL.Entities.Comment, CommentModel>()
+                ;
+            CreateMap<DAL.Entities.CommentStats, CommentStatsModel>();
+
+            // Map Posts & Posts stats from DB to Models
             CreateMap<DAL.Entities.Post, PostModel>()
                 .ForMember(d => d.Attaches, m => m.MapFrom(s => s.PostAttaches))
                 ;
-
             CreateMap<DAL.Entities.Post, DAL.Entities.PostWithStats>();
             CreateMap<DAL.Entities.PostStats, DAL.Entities.PostWithStats>()
                 .ForMember(d => d.Stats, m => m.MapFrom(s => s))
                 ;
             CreateMap<DAL.Entities.PostWithStats, PostModel>()
-                .IncludeBase<DAL.Entities.Post, PostModel>();
+                .IncludeBase<DAL.Entities.Post, PostModel>()
+                ;
             CreateMap<DAL.Entities.PostStats, PostStatsModel>();
+
 
             CreateMap<LikePostRequest, DAL.Entities.LikeToPost>()
                 .ForMember(d => d.Created, m => m.MapFrom(s => DateTime.UtcNow))

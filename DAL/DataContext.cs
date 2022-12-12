@@ -12,6 +12,7 @@ namespace DAL
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Ignore<PostWithStats>();
+            modelBuilder.Ignore<CommentWithStats>();
 
             modelBuilder
                 .Entity<User>()
@@ -78,6 +79,10 @@ namespace DAL
                .Entity<PostStats>()
                .ToView("PostsStats")
                .HasKey(t => t.Id);
+            modelBuilder
+               .Entity<CommentStats>()
+               .ToView("CommentsStats")
+               .HasKey(t => t.Id);
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) 
             => optionsBuilder.UseNpgsql(b => b.MigrationsAssembly("Api"));
@@ -98,5 +103,6 @@ namespace DAL
         public DbSet<UserConfig> UsersConfigs => Set<UserConfig>(); 
         public DbSet<UserActivity> UsersActivity => Set<UserActivity>();
         public DbSet<PostStats> PostsStats => Set<PostStats>();
+        public DbSet<CommentStats> CommentsStats => Set<CommentStats>();
     }
 }
