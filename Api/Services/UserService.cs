@@ -50,18 +50,11 @@ namespace Api.Services
             } 
         }
 
-        public async Task<UserAvatarModel> GetUserBrief (Guid id)
+        public async Task<UserAvatarModel> GetUser (Guid id)
         {
             var user = await GetUserWithAvatarById(id);
 
             return _mapper.Map<UserAvatarModel>(user);
-        }
-
-        public async Task<UserAvatarProfileModel> GetUserProfile(Guid id)
-        {
-            var user = await GetUserWithAvatarById(id);
-
-            return _mapper.Map<UserAvatarProfileModel>(user);
         }
 
         public async Task<UserActivityModel> GetUserActivity(Guid id)

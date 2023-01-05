@@ -27,7 +27,7 @@ namespace Api.Services
                 throw new ForbiddenException("not allowed to sub");
 
             var sub = _mapper.Map<DAL.Entities.Subscribe>(request, o => o.AfterMap((s, d) => d.FollowerId = userId));
-            sub.IsAccepted = await _accessService.GetInstantFollowPermission(request.AuthorId);
+            sub.IsAccepted = await _accessService.GetInstantFollowPermission(userId, request.AuthorId);
 
             await _context.Subscribes.AddAsync(sub);
             await _context.SaveChangesAsync();

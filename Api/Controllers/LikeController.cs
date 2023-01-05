@@ -1,6 +1,8 @@
 ﻿using Api.Models.Likes;
+using Api.Models.Post;
 using Api.Services;
 using Common.Consts;
+using Common.CustomExceptions.UnauthorizedExceptions;
 using Common.Extentions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -22,45 +24,31 @@ namespace Api.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task LikePost(LikePostRequest request)
+        public async Task<PostStatsModel> LikePost(LikePostRequest request)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                await _postService.LikePost(userId, request);
+                return await _postService.LikePost(userId, request);
+            }
+            else
+            {
+                throw new UnauthorizedException("not authorized");
             }
         }
 
         [HttpPost]
         [Authorize]
-        public async Task UndoLikeToPost(LikeToPostUndoRequest request)
+        public async Task<CommentStatsModel> LikeComment(LikeCommentRequest request)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                await _postService.UndoLikeToPost(userId, request);
+                return await _postService.LikeComment(userId, request);
             }
-        }
-
-        [HttpPost]
-        [Authorize]
-        public async Task LikeComment(LikeCommentRequest request)
-        {
-            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
-            if (userId != default)
+            else
             {
-                await _postService.LikeComment(userId, request);
-            }
-        }
-
-        [HttpPost]
-        [Authorize]
-        public async Task UndoLikeToComment(LikeToCommentUndoRequest request)
-        {
-            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
-            if (userId != default)
-            {
-                await _postService.UndoLikeToComment(userId, request);
+                throw new UnauthorizedException("not authorized");
             }
         }
     }

@@ -55,20 +55,7 @@ namespace Api.Controllers
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                return await _userService.GetUserBrief(userId);
-            }
-            else
-                throw new UnauthorizedException("you are not authorized");
-        }
-
-        [HttpGet]
-        [Authorize]
-        public async Task<UserAvatarProfileModel> GetCurrentUserProfile()
-        {
-            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
-            if (userId != default)
-            {
-                return await _userService.GetUserProfile(userId);
+                return await _userService.GetUser(userId);
             }
             else
                 throw new UnauthorizedException("you are not authorized");

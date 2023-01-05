@@ -11,10 +11,10 @@ namespace Api.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("CREATE OR REPLACE VIEW public.\"CommentsStats\" AS SELECT c.\"Id\", c.\"PostId\", " +
-                "count(l.\"Id\") AS \"LikesAmount\" " +
-                "FROM public.\"Comments\" c " +
-                "LEFT JOIN public.\"LikesToComments\" l ON c.\"Id\" = l.\"CommentId\" " +
-                "GROUP BY c.\"Id\";");
+            "COALESCE(l.\"LA\", 0) AS \"LikesAmount\" " +
+            "FROM public.\"Comments\" c " +
+            "LEFT JOIN(select \"CommentId\", count(\"CommentId\") AS \"LA\"  from public.\"LikesToComments\" group by \"CommentId\") l " +
+            "ON c.\"Id\" = l.\"CommentId\";");
         }
 
         /// <inheritdoc />

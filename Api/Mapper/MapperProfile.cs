@@ -31,9 +31,6 @@ namespace Api.Mapper
             CreateMap<DAL.Entities.User, UserAvatarModel>()
                 .AfterMap<UserAvatarMapperAction>()
                 ;
-            CreateMap<DAL.Entities.User, UserAvatarProfileModel>()
-                .IncludeBase<DAL.Entities.User, UserAvatarModel>()
-                ;
             CreateMap<DAL.Entities.UserActivity, UserActivityModel>();
 
             // Map Avatar from DB to Models used by Render Attach action

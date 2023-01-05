@@ -7,6 +7,7 @@ using AutoMapper;
 using Common.CustomExceptions;
 using Common.CustomExceptions.ForbiddenExceptions;
 using Common.CustomExceptions.NotFoundExceptions;
+using Common.Enums;
 using DAL;
 using DAL.Entities;
 using Microsoft.EntityFrameworkCore;
@@ -39,7 +40,7 @@ namespace Api.Services
         }
 
         public async Task CommentPost(Guid userId, CreateCommentPostRequest request)
-        {
+        {  
             var post = await GetPostById(request.PostId);
             if (!(await _accessService.GetWritePermission(userId, post.AuthorId)))
                 throw new ForbiddenException("no permission");
@@ -50,72 +51,70 @@ namespace Api.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task LikePost(Guid userId, LikePostRequest request)
-        {
-            var post = await GetPostById(request.PostId);
-            if (!(await _accessService.GetReadPermission(userId, post.AuthorId)))
-                throw new ForbiddenException("no permission");
-            if (await CheckLikeToPostExist(userId, request.PostId))
-                throw new ForbiddenException("like already exists");
-
-            var dbLike = _mapper.Map<DAL.Entities.LikeToPost>(request, o => o.AfterMap((s, d) => d.UserId = userId));
-            await _context.LikesToPosts.AddAsync(dbLike);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UndoLikeToPost(Guid userId, LikeToPostUndoRequest request)
+        public async Task<PostStatsModel> LikePost(Guid userId, LikePostRequest request)
         {
             var post = await GetPostById(request.PostId);
             if (!(await _accessService.GetReadPermission(userId, post.AuthorId)))
                 throw new ForbiddenException("no permission");
 
             var like = await GetLikeToPostById(userId, request.PostId);
-            _context.LikesToPosts.Remove(like);
-            await _context.SaveChangesAsync();
+
+            if (like == null)
+            {
+                var dbLike = _mapper.Map<DAL.Entities.LikeToPost>(request, o => o.AfterMap((s, d) => d.UserId = userId));
+                await _context.LikesToPosts.AddAsync(dbLike);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                _context.LikesToPosts.Remove(like);
+                await _context.SaveChangesAsync();
+            }     
+
+            return await GetPostStatsByUserIdAndPostId(userId, request.PostId);
         }
 
-        public async Task LikeComment(Guid userId, LikeCommentRequest request)
-        {
-            var comment = await GetCommentWithPostById(request.CommentId);
-            if (!(await _accessService.GetReadPermission(userId, comment.Post.AuthorId)))
-                throw new ForbiddenException("no permission");
-            if (await CheckLikeToCommentExist(userId, request.CommentId))
-                throw new ForbiddenException("like already exists");
-
-            var dbLike = _mapper.Map<DAL.Entities.LikeToComment>(request, o => o.AfterMap((s, d) => d.UserId = userId));
-            await _context.LikesToComments.AddAsync(dbLike);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UndoLikeToComment(Guid userId, LikeToCommentUndoRequest request)
+        public async Task<CommentStatsModel> LikeComment(Guid userId, LikeCommentRequest request)
         {
             var comment = await GetCommentWithPostById(request.CommentId);
             if (!(await _accessService.GetReadPermission(userId, comment.Post.AuthorId)))
                 throw new ForbiddenException("no permission");
 
             var like = await GetLikeToCommentById(userId, request.CommentId);
-            _context.LikesToComments.Remove(like);
-            await _context.SaveChangesAsync();
+
+            if (like == null)
+            {
+                var dbLike = _mapper.Map<DAL.Entities.LikeToComment>(request, o => o.AfterMap((s, d) => d.UserId = userId));
+                await _context.LikesToComments.AddAsync(dbLike);
+                await _context.SaveChangesAsync();
+            }
+            else
+            {
+                _context.LikesToComments.Remove(like);
+                await _context.SaveChangesAsync();
+            }
+
+            return await GetCommentStatsByUserIdAndCommentId(userId, request.CommentId);
         }
 
-        public async Task<IEnumerable<PostModel>> GetFeed(Guid userId, int skip, int take)
+        public async Task<IEnumerable<PostModel>> GetFeed(Guid userId, int take, DateTimeOffset? upTo)
         {
             var accessPolicy = _accessService.GetFeedAccessPolicy(userId);
-            var posts = await GetPostsAllowedToUser(userId, accessPolicy, skip, take);
+            var posts = await GetPostsAllowedToUser(userId, accessPolicy, take, upTo);
 
             return posts;
         }
-        public async Task<IEnumerable<PostModel>> GetSubscriptionsFeed(Guid userId, int skip, int take)
+        public async Task<IEnumerable<PostModel>> GetSubscriptionsFeed(Guid userId, int take, DateTimeOffset? upTo)
         {
             var accessPolicy = _accessService.GetFollowerAccessPolicy(userId);
-            var posts = await GetPostsAllowedToUser(userId, accessPolicy, skip, take);
+            var posts = await GetPostsAllowedToUser(userId, accessPolicy, take, upTo);
 
             return posts;
         }
-        public async Task<IEnumerable<PostModel>> GetUserPosts(Guid userId, Guid userToVisitId, int skip, int take)
+        public async Task<IEnumerable<PostModel>> GetUserPosts(Guid userId, Guid userToVisitId, int take, DateTimeOffset? upTo)
         {
-            var accessPolicy = _accessService.GetUserPostsAccessPolicy(userId, userToVisitId);
-            var posts = await GetPostsAllowedToUser(userId, accessPolicy, skip, take);
+            var accessPolicy = _accessService.GetUserAccessPolicy(userId, userToVisitId);
+            var posts = await GetPostsAllowedToUser(userId, accessPolicy, take, upTo);
 
             return posts;
         }
@@ -156,6 +155,22 @@ namespace Api.Services
             return _mapper.Map<AttachModel>(res);
         }
 
+        private async Task<PostStatsModel> GetPostStatsByUserIdAndPostId(Guid userId, Guid postId)
+        {
+            var postStats = await _context.PostsStats.FirstOrDefaultAsync(x => x.Id == postId);
+            var isLiked = await _context.LikesToPosts.AnyAsync(x => x.UserId == userId && x.PostId == postId);
+            var res = _mapper.Map<PostStatsModel>(postStats, o => o.AfterMap((s, d) => d.IsLiked = isLiked));
+            return res;
+        }
+
+        private async Task<CommentStatsModel> GetCommentStatsByUserIdAndCommentId(Guid userId, Guid commentId)
+        {
+            var commentStats = await _context.CommentsStats.FirstOrDefaultAsync(x => x.Id == commentId);
+            var isLiked = await _context.LikesToComments.AnyAsync(x => x.UserId == userId && x.CommentId == commentId);
+            var res = _mapper.Map<CommentStatsModel>(commentStats, o => o.AfterMap((s, d) => d.IsLiked = isLiked));
+            return res;
+        }
+
         private async Task<DAL.Entities.Post> GetPostById(Guid postId)
         {
             var post = await _context.Posts.AsNoTracking().FirstOrDefaultAsync(x => x.Id == postId);
@@ -165,15 +180,22 @@ namespace Api.Services
             return post;
         }
 
-        private async Task<IEnumerable<PostModel>> GetPostsAllowedToUser(Guid userId, IQueryable<Guid> accessPolicy, int skip, int take)
+        private async Task<IEnumerable<PostModel>> GetPostsAllowedToUser(Guid userId, IQueryable<Guid> accessPolicy, int take, DateTimeOffset? upTo)
         {
-            var posts = await _context.Posts
-                .Join(accessPolicy, x => x.AuthorId, y => y, (x, y) => x)
+            var postQuery = _context.Posts.AsQueryable();
+            if (upTo != null)
+            {
+                postQuery = postQuery.Where(x => x.UploadDate < upTo);
+            }
+            postQuery = postQuery.Join(accessPolicy, x => x.AuthorId, y => y, (x, y) => x)
                 .Include(x => x.Author)
                 .ThenInclude(x => x.Avatar)
                 .Include(x => x.PostAttaches)
-                .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
-                .ToListAsync();
+                .AsNoTracking()
+                .OrderByDescending(x => x.UploadDate)
+                .Take(take);
+            
+            var posts = await postQuery.ToListAsync();
 
             var postsStats = await _context.PostsStats.AsNoTracking().ToListAsync();
             var likedPostIds = await GetLikedPostIdsByUserId(userId);
@@ -199,20 +221,16 @@ namespace Api.Services
             return comment;
         }
 
-        private async Task<DAL.Entities.LikeToPost> GetLikeToPostById(Guid userId, Guid postId)
+        private async Task<DAL.Entities.LikeToPost?> GetLikeToPostById(Guid userId, Guid postId)
         {
             var like = await _context.LikesToPosts.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId && x.PostId == postId);
-            if (like == null)
-                throw new LikeNotFoundException("user wasn't liked this post");
 
             return like;
         }
 
-        private async Task<DAL.Entities.LikeToComment> GetLikeToCommentById(Guid userId, Guid commentId)
+        private async Task<DAL.Entities.LikeToComment?> GetLikeToCommentById(Guid userId, Guid commentId)
         {
             var like = await _context.LikesToComments.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId && x.CommentId == commentId);
-            if (like == null)
-                throw new LikeNotFoundException("user wasn't liked this comment");
 
             return like;
         }
@@ -238,16 +256,6 @@ namespace Api.Services
                 .ToListAsync();
 
             return likes;
-        }
-
-        private async Task<bool> CheckLikeToPostExist(Guid userId, Guid postId)
-        {
-            return await _context.LikesToPosts.AsNoTracking().AnyAsync(x => x.UserId == userId && x.PostId == postId);
-        }
-
-        private async Task<bool> CheckLikeToCommentExist(Guid userId, Guid commentId)
-        {
-            return await _context.LikesToComments.AsNoTracking().AnyAsync(x => x.UserId == userId && x.CommentId == commentId);
         }
     }
 }

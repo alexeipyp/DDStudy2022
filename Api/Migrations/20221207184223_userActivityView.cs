@@ -11,18 +11,22 @@ namespace Api.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.Sql("CREATE OR REPLACE VIEW public.\"UsersActivity\" AS SELECT u.\"Id\", " +
-                "count(p.\"Id\") AS \"PostsAmount\", count(f.\"AuthorId\") AS \"FollowersAmount\", count(s.\"FollowerId\") AS \"FollowingAmount\" " + 
-                "FROM public.\"Users\" u " +
-                "LEFT JOIN public.\"Posts\" p ON u.\"Id\" = p.\"AuthorId\" " +
-                "LEFT JOIN public.\"Subscribes\" f ON u.\"Id\" = f.\"AuthorId\" " +
-                "LEFT JOIN public.\"Subscribes\" s ON u.\"Id\" = s.\"FollowerId\" " +
-                "GROUP BY u.\"Id\";");
+            "COALESCE(p.\"PostsAmount\", 0) AS \"PostsAmount\", " +
+            "COALESCE(f.\"FollowersAmount\", 0) AS \"FollowersAmount\", " +
+            "COALESCE(s.\"FollowingAmount\", 0) AS \"FollowingAmount\" " +
+            "FROM public.\"Users\" u " +
+            "LEFT JOIN(select \"AuthorId\", count(\"AuthorId\") AS \"PostsAmount\" from public.\"Posts\" group by \"AuthorId\") p " +
+            "ON u.\"Id\" = p.\"AuthorId\" " +
+            "LEFT JOIN(select \"AuthorId\", count(\"AuthorId\") AS \"FollowersAmount\" from public.\"Subscribes\" where \"IsAccepted\" = true group by \"AuthorId\") f " +
+            "ON u.\"Id\" = f.\"AuthorId\" " +
+            "LEFT JOIN(select \"FollowerId\", count(\"FollowerId\") AS \"FollowingAmount\" from public.\"Subscribes\" where \"IsAccepted\" = true group by \"FollowerId\") s " +
+            "ON u.\"Id\" = s.\"FollowerId\";");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql("DROP VIEW public.\"UserActivity\";");
+            migrationBuilder.Sql("DROP VIEW public.\"UsersActivity\";");
         }
     }
 }

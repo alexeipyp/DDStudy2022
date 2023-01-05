@@ -58,12 +58,12 @@ namespace Api.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IEnumerable<PostModel>> GetFeed(int skip = 0, int take = 10)
+        public async Task<IEnumerable<PostModel>> GetFeed(int take = 10, DateTimeOffset? upTo = null)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                return await _postService.GetFeed(userId, skip, take);
+                return await _postService.GetFeed(userId,  take, upTo);
             }
             else
             {
@@ -73,12 +73,12 @@ namespace Api.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IEnumerable<PostModel>> GetSubscriptionsFeed(int skip = 0, int take = 10)
+        public async Task<IEnumerable<PostModel>> GetSubscriptionsFeed(int take = 10, DateTimeOffset? upTo = null)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                return await _postService.GetSubscriptionsFeed(userId, skip, take);
+                return await _postService.GetSubscriptionsFeed(userId, take, upTo);
             }
             else
             {
@@ -88,12 +88,12 @@ namespace Api.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IEnumerable<PostModel>> GetUserPosts(Guid userToVisitId, int skip = 0, int take = 10)
+        public async Task<IEnumerable<PostModel>> GetUserPosts(Guid userToVisitId, int take = 10, DateTimeOffset? upTo = null)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                return await _postService.GetUserPosts(userId, userToVisitId, skip, take);
+                return await _postService.GetUserPosts(userId, userToVisitId, take, upTo);
             }
             else
             {
