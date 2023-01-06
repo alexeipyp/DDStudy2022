@@ -130,14 +130,16 @@ namespace Api.Services
                 .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
                 .ToListAsync();
 
-            var commentsStats = await _context.CommentsStats.AsNoTracking().Where(x => x.PostId == postId).ToListAsync();
-            var likedCommentIds = await GetLikedCommentIdsByUserId(userId, postId);
+            var commentsStatsQuery = from stats in _context.CommentsStats.Where(x => x.PostId == postId)
+                                     join likes in _context.LikesToComments.Where(x => x.UserId == userId)
+                                    on stats.Id equals likes.CommentId into grouping
+                                 from likes in grouping.DefaultIfEmpty()
+                                 select new { stats, likes };
+            var commentsStats = (await commentsStatsQuery.ToListAsync()).Select(a => _mapper.Map<DAL.Entities.CommentStatsPersonal>(a.stats, o => o.AfterMap((s, d) => d.WhenLiked = a.likes?.Created)));
+
             var commentsWithStats = comments.Join(commentsStats, x => x.Id, y => y.Id,
-                (x, y) => _mapper.Map(y, _mapper.Map<DAL.Entities.CommentWithStats>(x)))
-                .Select(x => _mapper.Map<CommentModel>(x, o => o.AfterMap((s, d) =>
-                {
-                    d.Stats.IsLiked = likedCommentIds.Contains(d.Id);
-                })));
+                (x, y) => _mapper.Map<DAL.Entities.CommentWithStats>(x, o => o.AfterMap((s, d) => d.Stats = y)))
+                .Select(x => _mapper.Map<CommentModel>(x));
 
             return commentsWithStats;
         }
@@ -158,16 +160,18 @@ namespace Api.Services
         private async Task<PostStatsModel> GetPostStatsByUserIdAndPostId(Guid userId, Guid postId)
         {
             var postStats = await _context.PostsStats.FirstOrDefaultAsync(x => x.Id == postId);
-            var isLiked = await _context.LikesToPosts.AnyAsync(x => x.UserId == userId && x.PostId == postId);
-            var res = _mapper.Map<PostStatsModel>(postStats, o => o.AfterMap((s, d) => d.IsLiked = isLiked));
+            var like = await _context.LikesToPosts.FirstOrDefaultAsync(x => x.UserId == userId && x.PostId == postId);
+            DateTimeOffset? whenLiked = like != null ? like.Created : null;
+            var res = _mapper.Map<PostStatsModel>(postStats, o => o.AfterMap((s, d) => d.WhenLiked = whenLiked));
             return res;
         }
 
         private async Task<CommentStatsModel> GetCommentStatsByUserIdAndCommentId(Guid userId, Guid commentId)
         {
             var commentStats = await _context.CommentsStats.FirstOrDefaultAsync(x => x.Id == commentId);
-            var isLiked = await _context.LikesToComments.AnyAsync(x => x.UserId == userId && x.CommentId == commentId);
-            var res = _mapper.Map<CommentStatsModel>(commentStats, o => o.AfterMap((s, d) => d.IsLiked = isLiked));
+            var like = await _context.LikesToComments.FirstOrDefaultAsync(x => x.UserId == userId && x.CommentId == commentId);
+            DateTimeOffset? whenLiked = like != null ? like.Created : null;
+            var res = _mapper.Map<CommentStatsModel>(commentStats, o => o.AfterMap((s, d) => d.WhenLiked = whenLiked));
             return res;
         }
 
@@ -196,15 +200,16 @@ namespace Api.Services
                 .Take(take);
             
             var posts = await postQuery.ToListAsync();
-
-            var postsStats = await _context.PostsStats.AsNoTracking().ToListAsync();
-            var likedPostIds = await GetLikedPostIdsByUserId(userId);
+            
+            var postStatsQuery = from stats in _context.PostsStats
+                                 join likes in _context.LikesToPosts.Where(x => x.UserId == userId)
+                                    on stats.Id equals likes.PostId into grouping
+                                 from likes in grouping.DefaultIfEmpty()
+                                 select new { stats, likes};
+            var postsStats = (await postStatsQuery.ToListAsync()).Select(a => _mapper.Map<DAL.Entities.PostStatsPersonal>(a.stats, o => o.AfterMap((s, d) => d.WhenLiked = a.likes?.Created)));
+            
             var postsWithStats = posts.Join(postsStats, x => x.Id, y => y.Id,
-                (x, y) => _mapper.Map(y, _mapper.Map<DAL.Entities.PostWithStats>(x)))
-                .Select(x => _mapper.Map<PostModel>(x, o => o.AfterMap((s, d) =>
-                {
-                    d.Stats.IsLiked = likedPostIds.Contains(d.Id);
-                })));
+                (x, y) => _mapper.Map<DAL.Entities.PostWithStats>(x, o => o.AfterMap((s, d) => d.Stats = y))).Select(x => _mapper.Map<PostModel>(x));
 
             return postsWithStats;
         }
@@ -233,17 +238,6 @@ namespace Api.Services
             var like = await _context.LikesToComments.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId && x.CommentId == commentId);
 
             return like;
-        }
-
-        private async Task<List<Guid>> GetLikedPostIdsByUserId(Guid userId)
-        {
-            var likes = await _context.LikesToPosts
-                .AsNoTracking()
-                .Where(x => x.UserId == userId)
-                .Select(x => x.PostId)
-                .ToListAsync();
-
-            return likes;
         }
 
         private async Task<List<Guid>> GetLikedCommentIdsByUserId(Guid userId, Guid postId)

@@ -8,6 +8,6 @@ namespace DAL.Entities
 {
     public class CommentWithStats : Comment
     {
-        public CommentStats Stats { get; set; } = null!;
+        public CommentStatsPersonal Stats { get; set; } = null!;
     }
 }

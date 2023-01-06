@@ -12,4 +12,9 @@ namespace DAL.Entities
         public long CommentsAmount { get; set; }
         public long LikesAmount { get; set; }
     }
+
+    public class PostStatsPersonal : PostStats
+    {
+        public DateTimeOffset? WhenLiked { get; set; }
+    }
 }

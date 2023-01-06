@@ -4,6 +4,6 @@
     {
         public long CommentsAmount { get; set; }
         public long LikesAmount { get; set; }
-        public bool IsLiked { get; set; }
+        public DateTimeOffset? WhenLiked { get; set; }
     }
 }

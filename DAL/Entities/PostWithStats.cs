@@ -8,7 +8,7 @@ namespace DAL.Entities
 {
     public class PostWithStats : Post
     {
-        public PostStats Stats { get; set; } = null!;
+        public PostStatsPersonal Stats { get; set; } = null!;
 
     }
 }

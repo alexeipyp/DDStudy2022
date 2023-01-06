@@ -13,6 +13,8 @@ namespace DAL
         {
             modelBuilder.Ignore<PostWithStats>();
             modelBuilder.Ignore<CommentWithStats>();
+            modelBuilder.Ignore<PostStatsPersonal>();
+            modelBuilder.Ignore<CommentStatsPersonal>();
 
             modelBuilder
                 .Entity<User>()

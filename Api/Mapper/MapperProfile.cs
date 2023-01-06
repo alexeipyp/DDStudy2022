@@ -80,27 +80,31 @@ namespace Api.Mapper
 
             // Map Comments & Comments stats from DB to Output Models
             CreateMap<DAL.Entities.Comment, CommentModel>();
+            CreateMap<DAL.Entities.CommentStats, DAL.Entities.CommentStatsPersonal>();
+            CreateMap<DAL.Entities.LikeToComment, DAL.Entities.CommentStatsPersonal>()
+                .ForMember(d => d.WhenLiked, m => m.MapFrom(s => s.Created));
             CreateMap<DAL.Entities.Comment, DAL.Entities.CommentWithStats>();
-            CreateMap<DAL.Entities.CommentStats, DAL.Entities.CommentWithStats>()
-                .ForMember(d => d.Stats, m => m.MapFrom(s => s))
-                ;
+
             CreateMap<DAL.Entities.CommentWithStats, CommentModel>()
                 .IncludeBase<DAL.Entities.Comment, CommentModel>()
                 ;
             CreateMap<DAL.Entities.CommentStats, CommentStatsModel>();
+            CreateMap<DAL.Entities.CommentStatsPersonal, CommentStatsModel>();
 
             // Map Posts & Posts stats from DB to Output Models
             CreateMap<DAL.Entities.Post, PostModel>()
                 .ForMember(d => d.Attaches, m => m.MapFrom(s => s.PostAttaches))
                 ;
+            CreateMap<DAL.Entities.PostStats, DAL.Entities.PostStatsPersonal>();
+            CreateMap<DAL.Entities.LikeToPost, DAL.Entities.PostStatsPersonal>()
+                .ForMember(d => d.WhenLiked, m => m.MapFrom(s => s.Created));
             CreateMap<DAL.Entities.Post, DAL.Entities.PostWithStats>();
-            CreateMap<DAL.Entities.PostStats, DAL.Entities.PostWithStats>()
-                .ForMember(d => d.Stats, m => m.MapFrom(s => s))
                 ;
             CreateMap<DAL.Entities.PostWithStats, PostModel>()
                 .IncludeBase<DAL.Entities.Post, PostModel>()
                 ;
             CreateMap<DAL.Entities.PostStats, PostStatsModel>();
+            CreateMap<DAL.Entities.PostStatsPersonal, PostStatsModel>();
 
             // Map Post Attach from DB to Output Models
             CreateMap<DAL.Entities.PostAttach, AttachWithLinkModel>()
@@ -113,7 +117,9 @@ namespace Api.Mapper
                 ;
 
             // Map Create Like to Comment data to DB Entity
-            CreateMap<LikeCommentRequest, DAL.Entities.LikeToComment>();
+            CreateMap<LikeCommentRequest, DAL.Entities.LikeToComment>()
+                .ForMember(d => d.Created, m => m.MapFrom(s => DateTime.UtcNow))
+                ;
 
             // Map Create Subscribe data to DB Entity
             CreateMap<FollowUserRequest, DAL.Entities.Subscribe>();
