@@ -119,6 +119,43 @@ namespace Api.Services
             return posts;
         }
 
+        public async Task<IEnumerable<PostModel>> GetFavoritePosts(Guid userId, int take, DateTimeOffset? upTo)
+        {
+            var permittedUsers = _accessService.GetReadAccessPolicy(userId);
+            var postQuery = _context.Posts.AsQueryable()
+                .Join(permittedUsers, x => x.AuthorId, y => y.Id, (x, y) => x)
+                .Include(x => x.Author)
+                .ThenInclude(x => x.Avatar)
+                .Include(x => x.PostAttaches)
+                .Join(_context.LikesToPosts.Where(x => x.UserId == userId), post => post.Id, like => like.PostId, (post, like) => new { post, like.Created })
+                .AsNoTracking()
+                ;
+
+            if (upTo != null)
+            {
+                postQuery = postQuery.Where(x => x.Created < upTo);
+            }
+
+            postQuery = postQuery
+                .OrderByDescending(x => x.Created)
+                .Take(take);
+
+            var posts = await postQuery.ToListAsync();
+
+            var postStatsQuery = _context.PostsStats.Join(postQuery, x => x.Id, y => y.post.Id, (x, y) => x);
+            var postsStats = (await postStatsQuery.ToListAsync()).Select(x => _mapper.Map<DAL.Entities.PostStatsPersonal>(x));
+
+            var postsWithStats = posts.Join(postsStats, x => x.post.Id, y => y.Id,
+                (x, y) => _mapper.Map<DAL.Entities.PostWithStats>(x.post, o => o.AfterMap((s, d) => 
+                { 
+                    d.Stats = y; 
+                    d.Stats.WhenLiked = x.Created; 
+                }))).Select(x => _mapper.Map<PostModel>(x));
+
+            return postsWithStats;
+        }
+
+
         public async Task<IEnumerable<CommentModel>> GetComments(Guid userId, Guid postId, int skip, int take)
         {
             var permittedUsers = _accessService.GetReadAccessPolicy(userId);
@@ -191,22 +228,24 @@ namespace Api.Services
             {
                 postQuery = postQuery.Where(x => x.UploadDate < upTo);
             }
-            postQuery = postQuery.Join(permittedUsers, x => x.AuthorId, y => y.Id, (x, y) => x)
+            postQuery = postQuery
+                .Join(permittedUsers, x => x.AuthorId, y => y.Id, (x, y) => x)
                 .Include(x => x.Author)
                 .ThenInclude(x => x.Avatar)
                 .Include(x => x.PostAttaches)
                 .AsNoTracking()
                 .OrderByDescending(x => x.UploadDate)
                 .Take(take);
-            
+
             var posts = await postQuery.ToListAsync();
-            
-            var postStatsQuery = from stats in _context.PostsStats
-                                 join likes in _context.LikesToPosts.Where(x => x.UserId == userId)
-                                    on stats.Id equals likes.PostId into grouping
-                                 from likes in grouping.DefaultIfEmpty()
-                                 select new { stats, likes};
-            var postsStats = (await postStatsQuery.ToListAsync()).Select(a => _mapper.Map<DAL.Entities.PostStatsPersonal>(a.stats, o => o.AfterMap((s, d) => d.WhenLiked = a.likes?.Created)));
+
+            var postStatsQuery = _context.PostsStats.Join(postQuery, x => x.Id, y => y.Id, (x, y) => x);
+            var postStatsJoinLikesQuery = from stats in postStatsQuery
+                             join likes in _context.LikesToPosts.Where(x => x.UserId == userId)
+                                on stats.Id equals likes.PostId into grouping
+                             from likes in grouping.DefaultIfEmpty()
+                             select new { stats, likes};
+            var postsStats = (await postStatsJoinLikesQuery.ToListAsync()).Select(a => _mapper.Map<DAL.Entities.PostStatsPersonal>(a.stats, o => o.AfterMap((s, d) => d.WhenLiked = a.likes?.Created)));
             
             var postsWithStats = posts.Join(postsStats, x => x.Id, y => y.Id,
                 (x, y) => _mapper.Map<DAL.Entities.PostWithStats>(x, o => o.AfterMap((s, d) => d.Stats = y))).Select(x => _mapper.Map<PostModel>(x));

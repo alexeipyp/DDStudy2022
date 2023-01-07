@@ -88,6 +88,21 @@ namespace Api.Controllers
 
         [HttpGet]
         [Authorize]
+        public async Task<IEnumerable<PostModel>> GetFavoritePosts(int take = 10, DateTimeOffset? upTo = null)
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                return await _postService.GetFavoritePosts(userId, take, upTo);
+            }
+            else
+            {
+                throw new UnauthorizedException("not authorized");
+            }
+        }
+
+        [HttpGet]
+        [Authorize]
         public async Task<IEnumerable<PostModel>> GetUserPosts(Guid userToVisitId, int take = 10, DateTimeOffset? upTo = null)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
