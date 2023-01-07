@@ -63,7 +63,7 @@ namespace Api.Controllers
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                return await _postService.GetFeed(userId,  take, upTo);
+                return await _postService.GetSearchFeed(userId,  take, upTo);
             }
             else
             {

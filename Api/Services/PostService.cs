@@ -21,8 +21,8 @@ namespace Api.Services
     {
         private readonly IMapper _mapper;
         private readonly DAL.DataContext _context;
-        private readonly AccessManagementService _accessService;
-        public PostService(IMapper mapper, DataContext context, AccessManagementService accessService)
+        private readonly AccessAndFilterService _accessService;
+        public PostService(IMapper mapper, DataContext context, AccessAndFilterService accessService)
         {
             _mapper = mapper;
             _context = context;
@@ -97,16 +97,16 @@ namespace Api.Services
             return await GetCommentStatsByUserIdAndCommentId(userId, request.CommentId);
         }
 
-        public async Task<IEnumerable<PostModel>> GetFeed(Guid userId, int take, DateTimeOffset? upTo)
+        public async Task<IEnumerable<PostModel>> GetSearchFeed(Guid userId, int take, DateTimeOffset? upTo)
         {
-            var accessPolicy = _accessService.GetFeedAccessPolicy(userId);
-            var posts = await GetPostsAllowedToUser(userId, accessPolicy, take, upTo);
+            var filteredUsers = _accessService.GetSearchFeedFiltering(userId);
+            var posts = await GetPostsAllowedToUser(userId, filteredUsers, take, upTo);
 
             return posts;
         }
         public async Task<IEnumerable<PostModel>> GetSubscriptionsFeed(Guid userId, int take, DateTimeOffset? upTo)
         {
-            var accessPolicy = _accessService.GetFollowerAccessPolicy(userId);
+            var accessPolicy = _accessService.GetSubscribeFeedFiltering(userId);
             var posts = await GetPostsAllowedToUser(userId, accessPolicy, take, upTo);
 
             return posts;
@@ -121,11 +121,11 @@ namespace Api.Services
 
         public async Task<IEnumerable<CommentModel>> GetComments(Guid userId, Guid postId, int skip, int take)
         {
-            var accessPolicy = _accessService.GetReadAccessPolicy(userId);
+            var permittedUsers = _accessService.GetReadAccessPolicy(userId);
             var comments = await _context.Comments
                 .Where(x => x.PostId == postId)
                 .Include(x => x.Post)
-                .Join(accessPolicy, x => x.Post.AuthorId, y => y, (x, y) => x)
+                .Join(permittedUsers, x => x.Post.AuthorId, y => y.Id, (x, y) => x)
                 .Include(x => x.Author).ThenInclude(x => x.Avatar)
                 .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
                 .ToListAsync();
@@ -148,7 +148,7 @@ namespace Api.Services
         {
             var res = await _context.PostAttaches
                 .Include(x => x.Post)
-                .Join(_accessService.GetReadAccessPolicy(userId), x => x.Post.AuthorId, y => y, (x, y) => x)
+                .Join(_accessService.GetReadAccessPolicy(userId), x => x.Post.AuthorId, y => y.Id, (x, y) => x)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.Id == postAttachId);
             if (res == null)
@@ -184,14 +184,14 @@ namespace Api.Services
             return post;
         }
 
-        private async Task<IEnumerable<PostModel>> GetPostsAllowedToUser(Guid userId, IQueryable<Guid> accessPolicy, int take, DateTimeOffset? upTo)
+        private async Task<IEnumerable<PostModel>> GetPostsAllowedToUser(Guid userId, IQueryable<DAL.Entities.User> permittedUsers, int take, DateTimeOffset? upTo)
         {
             var postQuery = _context.Posts.AsQueryable();
             if (upTo != null)
             {
                 postQuery = postQuery.Where(x => x.UploadDate < upTo);
             }
-            postQuery = postQuery.Join(accessPolicy, x => x.AuthorId, y => y, (x, y) => x)
+            postQuery = postQuery.Join(permittedUsers, x => x.AuthorId, y => y.Id, (x, y) => x)
                 .Include(x => x.Author)
                 .ThenInclude(x => x.Avatar)
                 .Include(x => x.PostAttaches)
@@ -240,16 +240,5 @@ namespace Api.Services
             return like;
         }
 
-        private async Task<List<Guid>> GetLikedCommentIdsByUserId(Guid userId, Guid postId)
-        {
-            var likes = await _context.LikesToComments
-                .Include(x => x.Comment)
-                .AsNoTracking()
-                .Where(x => x.UserId == userId && x.Comment.PostId == postId)
-                .Select(x => x.CommentId)
-                .ToListAsync();
-
-            return likes;
-        }
     }
 }

@@ -70,7 +70,7 @@ namespace Api
             builder.Services.AddScoped<PostService>();
             builder.Services.AddScoped<LinkGeneratorService>();
             builder.Services.AddScoped<SubscribeService>();
-            builder.Services.AddScoped<AccessManagementService>();
+            builder.Services.AddScoped<AccessAndFilterService>();
             builder.Services.AddScoped<BlackListService>();
             builder.Services.AddScoped<MuteListService>();
 

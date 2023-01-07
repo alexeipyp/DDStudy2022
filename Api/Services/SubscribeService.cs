@@ -13,8 +13,8 @@ namespace Api.Services
     {
         private readonly IMapper _mapper;
         private readonly DataContext _context;
-        private readonly AccessManagementService _accessService;
-        public SubscribeService(IMapper mapper, DataContext context, AccessManagementService accessService)
+        private readonly AccessAndFilterService _accessService;
+        public SubscribeService(IMapper mapper, DataContext context, AccessAndFilterService accessService)
         {
             _mapper = mapper;
             _context = context;
