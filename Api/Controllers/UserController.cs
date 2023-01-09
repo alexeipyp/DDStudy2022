@@ -63,8 +63,16 @@ namespace Api.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<UserActivityModel> GetUserActivity(Guid userId) 
-            =>  await _userService.GetUserActivity(userId);
+        public async Task<UserActivityModel> GetUserActivity(Guid userId)
+        {
+            var currentUserId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+               return await _userService.GetUserActivity(currentUserId, userId);
+            }
+            else
+                throw new UnauthorizedException("you are not authorized");
+        }
 
         [HttpPost]
         [Authorize]

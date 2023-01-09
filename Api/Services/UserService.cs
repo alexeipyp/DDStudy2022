@@ -21,11 +21,13 @@ namespace Api.Services
     {
         private readonly IMapper _mapper;
         private readonly DAL.DataContext _context;
+        private readonly SubscribeService _subscribeService;
 
-        public UserService(IMapper mapper, DataContext context, IOptions<AuthConfig> config)
+        public UserService(IMapper mapper, DataContext context, IOptions<AuthConfig> config, SubscribeService subscribeService)
         {
             _mapper = mapper;
             _context = context;
+            _subscribeService = subscribeService;
         }
         public async Task CreateUser(CreateUserModel model)
         {
@@ -57,11 +59,13 @@ namespace Api.Services
             return _mapper.Map<UserAvatarModel>(user);
         }
 
-        public async Task<UserActivityModel> GetUserActivity(Guid id)
+        public async Task<UserActivityModel> GetUserActivity(Guid currentUserId, Guid userId)
         {
-            var userActivity = await _context.UsersActivity.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            var userActivity = await _context.UsersActivity.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
+            var subStatus = await _subscribeService.GetSubscribeStatus(currentUserId, userId);
 
-            return _mapper.Map<UserActivityModel>(userActivity);
+            var res = _mapper.Map<UserActivityModel>(userActivity, o => o.AfterMap((s, d) => d.SubscribeStatus = subStatus));
+            return res;
         }
 
         public async Task AddAvatarToUser(Guid userId, MetadataModel model)

@@ -30,12 +30,12 @@ namespace Api.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task FollowUser(FollowUserRequest request)
+        public async Task<SubscribeStatusModel> FollowUser(FollowUserRequest request)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                await _subscribeService.FollowUser(userId, request);
+                return await _subscribeService.FollowUser(userId, request);
             }
             else
             {
@@ -45,12 +45,12 @@ namespace Api.Controllers
 
         [HttpPost]
         [Authorize]
-        public async Task UndoFollowUser(UndoFollowUserRequest request)
+        public async Task<SubscribeStatusModel> UndoFollowUser(UndoFollowUserRequest request)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                await _subscribeService.UndoFollowUser(userId, request.AuthorId);
+                return await _subscribeService.UndoFollowUser(userId, request.AuthorId);
             }
             else
             {

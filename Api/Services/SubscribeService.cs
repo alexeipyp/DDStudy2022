@@ -21,7 +21,7 @@ namespace Api.Services
             _accessService = accessService;
         }
 
-        public async Task FollowUser(Guid userId, FollowUserRequest request)
+        public async Task<SubscribeStatusModel> FollowUser(Guid userId, FollowUserRequest request)
         {
             if (!(await _accessService.GetFollowPermission(userId, request.AuthorId)))
                 throw new ForbiddenException("not allowed to sub");
@@ -29,15 +29,27 @@ namespace Api.Services
             var sub = _mapper.Map<DAL.Entities.Subscribe>(request, o => o.AfterMap((s, d) => d.FollowerId = userId));
             sub.IsAccepted = await _accessService.GetInstantFollowPermission(userId, request.AuthorId);
 
+            SubscribeStatusModel res;
+            if (sub.IsAccepted)
+            {
+                res = new SubscribeStatusModel { isFollowing = sub.IsAccepted, isSubscribeRequestSent = sub.IsAccepted };
+            }
+            else
+            {
+                res = new SubscribeStatusModel { isFollowing = sub.IsAccepted, isSubscribeRequestSent = !sub.IsAccepted };
+            }
+
             await _context.Subscribes.AddAsync(sub);
             await _context.SaveChangesAsync();
+            return res;
         }
 
-        public async Task UndoFollowUser(Guid userId, Guid authorId)
+        public async Task<SubscribeStatusModel> UndoFollowUser(Guid userId, Guid authorId)
         {
             var sub = await GetSubscribeById(authorId, userId);
             _context.Subscribes.Remove(sub);
             await _context.SaveChangesAsync();
+            return new SubscribeStatusModel { isFollowing = false, isSubscribeRequestSent = false };
         }
 
         public async Task AcceptFollowRequest(Guid userId, Guid followerCandidateId)
@@ -69,6 +81,25 @@ namespace Api.Services
                 .ToListAsync();
 
             return followers;
+        }
+
+        public async Task<SubscribeStatusModel> GetSubscribeStatus(Guid followerCandidateId, Guid authorCandidateId)
+        {
+            bool isFollowing = false;
+            bool isSubscribeRequestSent = false;
+            if (followerCandidateId != authorCandidateId)
+            {
+                isFollowing = await CheckSubscribeById(authorCandidateId, followerCandidateId, false);
+                if (!isFollowing)
+                {
+                    isSubscribeRequestSent = await CheckSubscribeById(authorCandidateId, followerCandidateId, true);
+                }
+                else
+                {
+                    isSubscribeRequestSent = isFollowing;
+                }          
+            }
+            return new SubscribeStatusModel { isFollowing = isFollowing, isSubscribeRequestSent = isSubscribeRequestSent };
         }
 
         public async Task<IEnumerable<UserAvatarModel>> GetFollowRequestsListById(Guid userId)
@@ -105,6 +136,11 @@ namespace Api.Services
                 throw new SubscribeNotFoundException();
             
             return sub;
+        }
+
+        private async Task<bool> CheckSubscribeById(Guid authorId, Guid followerId, bool isSubRequest = false)
+        {
+            return await _context.Subscribes.AnyAsync(x => x.AuthorId == authorId && x.FollowerId == followerId && x.IsAccepted != isSubRequest);
         }
 
     }
