@@ -156,16 +156,22 @@ namespace Api.Services
         }
 
 
-        public async Task<IEnumerable<CommentModel>> GetComments(Guid userId, Guid postId, int skip, int take)
+        public async Task<IEnumerable<CommentModel>> GetComments(Guid userId, Guid postId, int take, DateTimeOffset? upTo)
         {
             var permittedUsers = _accessService.GetReadAccessPolicy(userId);
-            var comments = await _context.Comments
+            var commentsQuery = _context.Comments.AsQueryable();
+            if (upTo != null)
+            {
+                commentsQuery = commentsQuery.Where(x => x.UploadDate > upTo);
+            }
+            commentsQuery = commentsQuery
                 .Where(x => x.PostId == postId)
                 .Include(x => x.Post)
                 .Join(permittedUsers, x => x.Post.AuthorId, y => y.Id, (x, y) => x)
                 .Include(x => x.Author).ThenInclude(x => x.Avatar)
-                .AsNoTracking().OrderByDescending(x => x.UploadDate).Skip(skip).Take(take)
-                .ToListAsync();
+                .AsNoTracking().OrderBy(x => x.UploadDate).Take(take);
+
+            var comments = await commentsQuery.ToListAsync();
 
             var commentsStatsQuery = from stats in _context.CommentsStats.Where(x => x.PostId == postId)
                                      join likes in _context.LikesToComments.Where(x => x.UserId == userId)

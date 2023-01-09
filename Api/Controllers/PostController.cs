@@ -118,12 +118,12 @@ namespace Api.Controllers
 
         [HttpGet]
         [Authorize]
-        public async Task<IEnumerable<CommentModel>> GetComments(Guid postId, int skip = 0, int take = 10)
+        public async Task<IEnumerable<CommentModel>> GetComments(Guid postId, int take = 10, DateTimeOffset? upTo = null)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
             if (userId != default)
             {
-                return await _postService.GetComments(userId, postId, skip, take);
+                return await _postService.GetComments(userId, postId, take, upTo);
             }
             else
             {
