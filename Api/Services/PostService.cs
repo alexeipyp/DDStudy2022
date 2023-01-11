@@ -200,7 +200,7 @@ namespace Api.Services
             return _mapper.Map<AttachModel>(res);
         }
 
-        private async Task<PostStatsModel> GetPostStatsByUserIdAndPostId(Guid userId, Guid postId)
+        public async Task<PostStatsModel> GetPostStatsByUserIdAndPostId(Guid userId, Guid postId)
         {
             var postStats = await _context.PostsStats.FirstOrDefaultAsync(x => x.Id == postId);
             var like = await _context.LikesToPosts.FirstOrDefaultAsync(x => x.UserId == userId && x.PostId == postId);

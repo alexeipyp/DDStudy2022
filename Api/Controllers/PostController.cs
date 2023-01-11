@@ -118,6 +118,22 @@ namespace Api.Controllers
 
         [HttpGet]
         [Authorize]
+        public async Task<PostStatsModel> GetPostStats(Guid postId)
+        {
+            var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
+            if (userId != default)
+            {
+                return await _postService.GetPostStatsByUserIdAndPostId(userId, postId);
+            }
+            else
+            {
+                throw new UnauthorizedException("not authorized");
+            }
+        }
+
+
+        [HttpGet]
+        [Authorize]
         public async Task<IEnumerable<CommentModel>> GetComments(Guid postId, int take = 10, DateTimeOffset? upTo = null)
         {
             var userId = User.GetClaimValue<Guid>(ClaimNames.Id);
